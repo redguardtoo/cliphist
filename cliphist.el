@@ -25,16 +25,43 @@
 
 ;;; Commentary:
 
-;; Read from clipboard history from parcellite (http://parcellite.sourceforge.net)
+;; Read clipboard history of parcellite (http://parcellite.sourceforge.net)
 ;; Other clipboard manager will be supported soon.
 
 ;;; Code:
 
+(defun test ()
+  (interactive)
+  (cliphist-read-bytes (file-truename "~/.local/share/parcellite/history"))
+  )
+
+(defun cliphist-read-items-from-history (path)
+  "hexl-mode, Read binary data from PATH.
+Return the binary data as unibyte string.
+The format of history, first 4 bytes, specify the size of content (the little endian way) , always end with 4 byte zeroed
+"
+  ( with-temp-buffer
+    (set-buffer-multibyte nil)
+    (setq buffer-file-coding-system 'binary)
+    (insert-file-contents-literally path)
+    (buffer-substring-no-properties (point-min) (point-max))))
+
 (defun cliphist-get-item-content ()
-  (interactive "sEnter a string:")
+  (interactive)
   (let (rlt)
     (setq rlt "hello world")
+    (message "rlt=%s" rlt)
     rlt))
+
+(defun cliphist-next-item ()
+  (interactive)
+  (message "cliphist-next-item called")
+  )
+
+(defun cliphist-previous-item ()
+  (interactive)
+  (message "cliphist-previous-item called")
+  )
 
 (provide 'cliphist)
 ;;; cliphist.el ends here
