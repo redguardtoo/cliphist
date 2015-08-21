@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ShortcutRecorder mainHotkey</key>
+	<dict>
+		<key>keyCode</key>
+		<integer>9</integer>
+		<key>modifierFlags</key>
+		<integer>1179648</integer>
+	</dict>
+	<key>bezelAlpha</key>
+	<real>0.25</real>
+	<key>bezelHeight</key>
+	<real>320</real>
+	<key>bezelWidth</key>
+	<real>500</real>
+	<key>displayNum</key>
+	<integer>10</integer>
+	<key>loadOnStartup</key>
+	<true/>
+	<key>menuIcon</key>
+	<integer>0</integer>
+	<key>menuSelectionPastes</key>
+	<true/>
+	<key>pasteMovesToTop</key>
+	<true/>
+	<key>popUpAnimation</key>
+	<true/>
+	<key>rememberNum</key>
+	<integer>40</integer>
+	<key>removeDuplicates</key>
+	<true/>
+	<key>revealPasteboardTypes</key>
+	<false/>
+	<key>savePreference</key>
+	<integer>2</integer>
+	<key>skipPasswordFields</key>
+	<true/>
+	<key>skipPasswordLengths</key>
+	<true/>
+	<key>skipPasswordLengthsList</key>
+	<string>12, 20, 24, 32</string>
+	<key>skipPboardTypes</key>
+	<true/>
+	<key>skipPboardTypesList</key>
+	<string>PasswordPboardType</string>
+	<key>stickyBezel</key>
+	<true/>
+	<key>store</key>
+	<dict>
+		<key>displayLen</key>
+		<integer>40</integer>
+		<key>displayNum</key>
+		<integer>10</integer>
+		<key>jcList</key>
+		<array>
+		</array>
+		<key>rememberNum</key>
+		<integer>40</integer>
+		<key>version</key>
+		<string>0.7</string>
+	</dict>
+	<key>wraparoundBezel</key>
+	<true/>
+</dict>
+</plist>
