@@ -1,0 +1,23 @@
+### https://raw.github.com/github/gitignore/747efedec0a85efb8234710f05629ca5382e3914/Global/Emacs.gitignore
+
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+.elc
+auto-save-list
+tramp
+.\#*
+
+# Org-mode
+.org-id-locations
+*_archive
+
+
+### https://raw.github.com/github/gitignore/747efedec0a85efb8234710f05629ca5382e3914/Global/Vim.gitignore
+
+.*.sw[a-z]
+*.un~
+Session.vim
+.netrwhist
+

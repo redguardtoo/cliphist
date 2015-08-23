@@ -3,6 +3,7 @@
 ;; Copyright (C) 2015 Chen Bin
 ;;
 ;; Version: 0.0.1
+;; Package-Requires: ((popup "0.5.0"))
 ;; Keywords: keyword1 keyword2
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
 ;; URL: http://github.com/redguardtoo/cliphist
@@ -25,100 +26,52 @@
 
 ;;; Commentary:
 
-;; Read clipboard history of parcellite (http://parcellite.sourceforge.net)
-;; Other clipboard manager will be supported soon.
+;; Read clipboard itemsfrom following clipboard managers,
+;;   - Parcellite (http://parcellite.sourceforge.net)
+;;   - Flycut (https://github.com/TermiT/Flycut)
+;;
+;; You only need `M-x cliphist-paste-item'
 
 ;;; Code:
 
-(defvar cliphist-items nil)
-(defvar cliphist-current-item-index 0)
+(require 'popup)
 
-(defun cliphist--get-item-size (str str-len beg)
-  (let (size)
-    ;; read 4 bytes in little endian order
-    (if (< (+ beg 3) str-len)
-        (setq size (+ (elt str beg)
-                      (* 256 (elt str (+ 1 beg)))
-                      (* 256 256 (elt str (+ 2 beg)))
-                      (* 256 256 256 (elt str (+ 3 beg)))
-                      )))
-    size))
+(defvar cliphist-items nil
+  "Item list extracted from clipboard manager's data")
 
-(defun cliphist--read-item (str str-len is-new-version &optional item)
-  (let (rlt index beg size)
-    (if item (setq beg (nth 1 item))
-      (setq beg 0))
-    ;; read 4 bytes to get the item length
-    (setq size (cliphist--get-item-size str str-len beg))
+(autoload 'cliphist-flycut-read-items "cliphist-flycut" nil)
+(autoload 'cliphist-parcellite-read-items "cliphist-parcellite" nil)
 
-    ;; read string
-    (if (and size (> size 0))
-        (setq rlt (list (substring str (+ 4 beg) (+ 4 beg size)) (+ 4 beg size))))
-    rlt))
+;;;###autoload
+(defun cliphist-read-items ()
+  (interactive)
+  (let (rlt)
+    (cond
+     ((eq system-type 'darwin)
+      ;; if nothing in clipboard, avoid purging the cache in Emacs
+      (if (setq rlt (cliphist-flycut-read-items))
+          (setq cliphist-items rlt)))
+     ((or (eq system-type 'gnu/linux) (eq system-type 'linux))
+      ;; if nothing in clipboard, avoid purging the cache in Emacs
+      (if (setq rlt (cliphist-parcellite-read-items))
+          (setq cliphist-items rlt)))
+     (t (message "Sorry, only Linux and OS X are supported."))
+     )))
 
-(defun cliphist-read-items-from-history (path)
-  "hexl-mode, Read binary data from PATH.
-Return the binary data as unibyte string.
-The format of history, first 4 bytes, specify the size of content (the little endian way) , always end with 4 byte zeroed
-"
-  (let (str v1 item rlt str-len)
-    (setq str (with-temp-buffer
-                (set-buffer-multibyte nil)
-                (setq buffer-file-coding-system 'binary)
-                (insert-file-contents-literally path)
-                (buffer-substring-no-properties (point-min) (point-max)))
-          )
-    (setq str-len (length str))
-    ;; Is 1.0?
-    (setq v1 (and (= (elt str 0) 49)
-                  (= (elt str 1) 46) (= (elt str 2) 48)))
-    ;; reset cache
-    (setq cliphist-items nil)
-    ;; read clipboard items into cache
-    (while(setq item (cliphist--read-item str str-len v1 item))
-      (add-to-list 'rlt (car item)))
-
-    rlt))
-
-(defun cliphist-move (delta)
-  (let (b e)
-    (when (and cliphist-items
+;;;###autoload
+(defun cliphist-paste-item ()
+  (interactive)
+  (let (selected-item)
+    (cliphist-read-items)
+    (if (and cliphist-items
                (> (length cliphist-items) 0))
-      (setq b (if (= delta 1) 0 (- (length cliphist-items) 1)))
-      (setq e (if (= delta 1) (length cliphist-items) -1))
-
-      ;; move the pointer to the current item in clipboard history
-      (setq cliphist-current-item-index (+ delta cliphist-current-item-index))
-
-      ;; rewind if needed
-      (if (= cliphist-current-item-index e)
-          (setq cliphist-current-item-index b))
-      (if (and cliphist-items
-               (< cliphist-current-item-index (length cliphist-items)))
-          (message "Current clip: %s" (cliphist-get-current-item-content))))
-    ))
-
-;;;###autoload
-(defun cliphist-get-current-item-content ()
-  (decode-coding-string (nth cliphist-current-item-index cliphist-items) 'utf-8))
-
-;;;###autoload
-(defun cliphist-next ()
-  (interactive)
-  (cliphist-move 1))
-
-;;;###autoload
-(defun cliphist-previous ()
-  (interactive)
-  (cliphist-move -1))
-
-;;;###autoload
-(defun cliphist-insert-current-item-content ()
-  (interactive)
-  (if (and cliphist-items
-           (< cliphist-current-item-index (length cliphist-items)))
-      (insert (cliphist-get-current-item-content))))
+        (if (setq selected-item
+                  (popup-menu* cliphist-items
+                               ;; display more content
+                               ;; enable search by default
+                               :isearch t))
+          (insert selected-item))
+      (message "Nothing in clipboard yet!"))))
 
 (provide 'cliphist)
 ;;; cliphist.el ends here
-
