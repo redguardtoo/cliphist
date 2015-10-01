@@ -42,6 +42,7 @@
 (autoload 'cliphist-flycut-read-items "cliphist-flycut" nil)
 (autoload 'cliphist-parcellite-read-items "cliphist-parcellite" nil)
 
+
 ;;;###autoload
 (defun cliphist-read-items ()
   (interactive)
@@ -58,9 +59,9 @@
      (t (message "Sorry, only Linux and OS X are supported."))
      )))
 
-;;;###autoload
-(defun cliphist-paste-item ()
-  (interactive)
+(defun cliphist-do-item (num fn)
+  "Select a item and do something.  Utility used by other commands.
+FN do the thing."
   (let (selected-item)
     (cliphist-read-items)
     (if (and cliphist-items
@@ -70,8 +71,22 @@
                                ;; display more content
                                ;; enable search by default
                                :isearch t))
-          (insert selected-item))
+            (funcall fn num selected-item))
       (message "Nothing in clipboard yet!"))))
+
+;;;###autoload
+(defun cliphist-paste-item ()
+  (interactive)
+  (cliphist-do-item 1 (lambda (num str) (insert str))))
+
+;;;###autoload
+(defun cliphist-select-item (&optional num)
+  "Select one item from clipboard history.
+NUM is passed to `cliphist-select-item-hook'."
+  (interactive "P")
+  (cliphist-do-item num (lambda (num str)
+                          (message "str=%s" str)
+                          )))
 
 (provide 'cliphist)
 ;;; cliphist.el ends here
