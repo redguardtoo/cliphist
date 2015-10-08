@@ -25,11 +25,12 @@
 
 ;;; Code:
 
-(defun cliphist-parcellite-get-item-size (str str-len beg &optional short-int)
-  "If SHORT-INT is t, read 2 bytes, or else read 4 bytes"
+(defun cliphist-parcellite-get-item-size (str len beg &optional short-int)
+  "Scan STR whose length is LEN.  Start scanning from position BEG.
+If SHORT-INT is t, read 2 bytes.  Or else read 4 bytes."
   (let (size)
     ;; read 4 bytes in little endian order
-    (if (< (+ beg 3) str-len)
+    (if (< (+ beg 3) len)
         (setq size (+ (elt str beg)
                       (* 256 (elt str (+ 1 beg)))
                       (if short-int 0
@@ -38,9 +39,10 @@
                       )))
     size))
 
-(defun cliphist-parcellite-read-item (str str-len item &optional is-new-version)
-  "Parcellite v1.0, 4 bytes size + 24 bytes item, the first 4 bytes of item is
-length, the next 4 items is type, we only care about text type"
+(defun cliphist-parcellite-read-item (str len item &optional is-new-version)
+  "Parcellite binary data STR with length LEN is analyzed.
+ITEM is the previous item extracted whose data useful for current extraction.
+If IS-NEW-VERSION is t, it's Parcellite v1.0+."
   (let (rlt
         index
         beg
@@ -49,14 +51,14 @@ length, the next 4 items is type, we only care about text type"
     (if item (setq beg (nth 1 item))
       (setq beg (if is-new-version 32 0)))
     ;; read 4 bytes to get the item length
-    (setq size (cliphist-parcellite-get-item-size str str-len beg))
+    (setq size (cliphist-parcellite-get-item-size str len beg))
 
     ;; read string
     (if (and size (> size 0))
         (cond
          (is-new-version
           ;; type has two bytes
-          (setq type (cliphist-parcellite-get-item-size str str-len (+ 8 beg) 2))
+          (setq type (cliphist-parcellite-get-item-size str len (+ 8 beg) 2))
           ;; 1 means STRING type
           (if (= 1 type)
               ;; Just fetch the content, I don't care about the summary of item
@@ -66,11 +68,10 @@ length, the next 4 items is type, we only care about text type"
           (setq rlt (list (substring str (+ 4 beg) (+ 4 beg size)) (+ 4 beg size))))))
     rlt))
 
-(defun cliphist-parcellite-read-items ()
-  "Read Parcellite binary data.
-Each item's first 4 bytes specify the size of content.
-It ends with 4 byte zeroed.
-Please note byte are stored in little endian way."
+(defun cliphist-parcellite-read-items (fn-insert)
+  "For each item, First 4 bytes specify the size of content.
+It ends with 4 byte zeroed.  Please note byte are stored in little endian way.
+Extracted item will be passed to FN-INSERT."
   (let (str item rlt str-len is-new-version path)
     (setq path (file-truename "~/.local/share/parcellite/history"))
     (setq str (with-temp-buffer
@@ -88,7 +89,7 @@ Please note byte are stored in little endian way."
     (while (setq item (cliphist-parcellite-read-item str str-len item is-new-version))
       ;; filter out short strings
       (unless (< (length (car item)) 3)
-        (add-to-list 'rlt (decode-coding-string (car item) 'utf-8))))
+        (funcall fn-insert 'rlt (decode-coding-string (car item) 'utf-8))))
     rlt))
 
 (provide 'cliphist-parcellite)

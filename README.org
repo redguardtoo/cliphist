@@ -1,0 +1,42 @@
+* cliphist (v0.1.0)
+
+[[http://melpa.org/#/find-and-ctags][file:http://melpa.org/packages/cliphist-badge.svg]] [[http://stable.melpa.org/#/find-and-ctags][file:http://stable.melpa.org/packages/cliphist-badge.svg]]
+
+Read clipboard history from [[http://parcellite.sourceforge.net/][Parcellite]] on Linux and [[https://github.com/TermiT/Flycut][Flycut]] on OS X.
+* Install
+The easiest way is install from [[http://melpa.org][melpa]] using package manager.
+
+If you install from source code, please place cliphist.el somewhere (say ~/.emacs/lisp), and insert below code into ".emacs":
+
+#+begin_src elisp
+(add-to-list 'load-path "~/.emacs.d/lisp/")
+(require 'cliphist)
+#+end_src
+
+[[https://github.com/auto-complete/popup-el][popup.el]] 5.0 is required as dependency.
+
+* Usage
+Make sure the clipboard manager is running.
+
+- `M-x cliphist-paste-item' to paste item from history
+- `M-x cliphist-select-item' to select item
+
+In popup, press `C-n' or `C-p' to navigate, other keys to filter.
+* Advanced Tips (OPTIONAL)
+You can customize the behavior of cliphist-select-item,
+#+begin_src elisp
+(setq cliphist-select-item-callback
+      (lambda (num str) (cliphist-copy-to-clipboard str)))
+#+end_src
+
+* Bug Report
+Check [[https://github.com/redguardtoo/cliphist]].
+
+* License
+Copyright (C) 2015 Chen Bin
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program. If not, see [[http://www.gnu.org/licenses/]].

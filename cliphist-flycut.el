@@ -26,8 +26,9 @@
 ;;; Code:
 
 (defun cliphist-flycut-decode-xml-string (string)
-  (let (rlt)
-    (setq rlt
+  "Decode STRING from xml encoded format."
+  (let (str)
+    (setq str
           (with-temp-buffer
             (insert string)
             (dolist (substitution '(("&" . "&amp;")
@@ -39,11 +40,12 @@
               (while (search-forward (car substitution) nil t)
                 (replace-match (cdr substitution) t t nil)))
             (buffer-substring-no-properties (point-min) (point-max))))
-    (decode-coding-string rlt 'utf-8)))
+    (decode-coding-string str 'utf-8)))
 
-(defun cliphist-flycut-read-items ()
+(defun cliphist-flycut-read-items (fn-insert)
   "Flycut store the data in xml file.
-We use regex to extract the STRING clipboard item."
+We use regex to extract the clipboard item.
+Then call FN-INSERT to insert the item into the list which returned by this function."
   (let (arr str rlt b e path)
     ;; (setq path (file-truename "~/projs/cliphist/data/flycut/com.generalarcade.flycut.plist")) ; debug
     (setq path (file-truename "~/Library/Application Support/Flycut/com.generalarcade.flycut.plist"))
@@ -58,10 +60,6 @@ We use regex to extract the STRING clipboard item."
     ;; hate xml, string matching is ACTUALLY more elegant.
     (setq arr (split-string str "\\(^[\t \r\n]*<dict>[\t \r\n]*\\|[\t \r\n]*</dict>[\t \r\n]*<dict>[\t \r\n]*\\|[\t \r\n]*</dict>[\t \r\n]*$\\)"))
     (dolist (item arr)
-      (message "item=%s" item)
-      ;; we only care about string type
-      (unless (string= "" item)
-        (setq g item))
 
       (if (string-match "<string>NSStringPboardType</string>" item)
           (let ((s1 "<key>Contents</key>")
@@ -71,7 +69,8 @@ We use regex to extract the STRING clipboard item."
             (setq b (+ (length s1) (string-match s1 item)))
             (setq b (+ (length s2) (string-match s2 item b)))
             (setq e (string-match s3 item b))
-            (add-to-list 'rlt (cliphist-flycut-decode-xml-string (substring item b e)) t)
+            ;; insert item into rlt
+            (funcall fn-insert 'rlt (cliphist-flycut-decode-xml-string (substring item b e)))
             )))
     rlt))
 

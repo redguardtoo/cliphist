@@ -21,3 +21,5 @@ tramp
 Session.vim
 .netrwhist
 
+*.tar
+
