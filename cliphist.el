@@ -52,7 +52,7 @@
 
 (defvar cliphist-select-item-callback nil
   "The callback of `cliphist-select-item'.
-If nil, selected item will be copied to clipboard when `cliphist-select-item' called.
+If nil, selected item is copied to clipboard when `cliphist-select-item' called.
 Or else the `(funcall cliphist-select-item num item)' will be executed.")
 
 (defvar cliphist-items nil
