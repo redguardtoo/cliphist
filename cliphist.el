@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015 Chen Bin
 ;;
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Package-Requires: ((popup "0.5.0"))
 ;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
@@ -45,7 +45,8 @@
 
 (require 'popup)
 
-(defvar cliphist-popup-height 9 "Height of candidates popup.")
+(defvar cliphist-popup-max-height 9
+  "Maximum height of candidates popup.")
 
 (defvar cliphist-item-summary-string-maxlength 32
   "Maximum string length of item summary displayed in menu")
@@ -61,9 +62,37 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 (autoload 'cliphist-flycut-read-items "cliphist-flycut" nil)
 (autoload 'cliphist-parcellite-read-items "cliphist-parcellite" nil)
 
+(defun cliphist--posn-col-row (posn)
+  (let ((col (car (posn-col-row posn)))
+        ;; `posn-col-row' doesn't work well with lines of different height.
+        ;; `posn-actual-col-row' doesn't handle multiple-width characters.
+        (row (cdr (posn-actual-col-row posn))))
+    (when (and header-line-format (version< emacs-version "24.3.93.3"))
+      ;; http://debbugs.gnu.org/18384
+      (cl-decf row))
+    (cons (+ col (window-hscroll)) row)))
+
+(defun cliphist-row (&optional pos)
+  "The row position of cursort in current window"
+  (interactive)
+  (cdr (cliphist--posn-col-row (posn-at-point pos))))
+
+(defun cliphist-optimized-popup-height ()
+  "Calculate the appropriate tooltip height."
+  (let* ((lines (cliphist-row))
+         (items-length (length cliphist-items))
+         (ideal-height (min cliphist-popup-max-height items-length))
+         (window-height (if (fboundp 'window-screen-lines)
+                            (floor (window-screen-lines))
+                          (window-body-height)))
+         (below (- window-height 1 lines)))
+    (if (and (< below ideal-height)
+             (> lines below))
+        (- (min lines ideal-height))
+      (min below ideal-height))))
+
 (defun cliphist-create-summary (stripped)
   (let (rlt need-hint)
-    ;; get first 16 characters as summary
     (setq rlt (substring-no-properties
                stripped
                0 (min (length stripped) cliphist-item-summary-string-maxlength)))
@@ -72,6 +101,15 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
     ;; remove cr&lf inside summary
     (setq rlt (replace-regexp-in-string "[ \t\n]+" " " rlt))
     (if need-hint (setq rlt (concat rlt " ...")))
+    rlt))
+
+(defun cliphist-popup-position-above-point (height)
+  "Height is negative"
+  (let (rlt
+        (lines-backward (abs height)))
+    (save-excursion
+      (forward-line (- (1+ lines-backward)))
+      (setq rlt (point)))
     rlt))
 
 (defun cliphist-add-item-to-cache (item-list str)
@@ -104,18 +142,22 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 (defun cliphist-do-item (num fn)
   "Select a item and do something.  Utility used by other commands.
 FN do the thing."
-  (let (selected-item)
+  (let (selected-item pseudo-height)
     (cliphist-read-items)
-    (if (and cliphist-items
-               (> (length cliphist-items) 0))
-        (if (setq selected-item
-                  (popup-menu* cliphist-items
-                               ;; display more content
-                               ;; enable search by default
-                               :height cliphist-popup-height
-                               :isearch t))
-            (funcall fn num selected-item))
-      (message "Nothing in clipboard yet!"))))
+    (cond
+     ((and cliphist-items (> (length cliphist-items) 0))
+      (setq pseudo-height (cliphist-optimized-popup-height))
+      (if (setq selected-item
+                (popup-menu* cliphist-items
+                             :point (if (>= pseudo-height 0) nil (cliphist-popup-position-above-point pseudo-height))
+                             ;; popup.el bug, when there is N lines above to show the popup
+                             ;; the actual height must be N-1
+                             :height (abs pseudo-height)
+                             ;; enable search by default
+                             :isearch t))
+          (funcall fn num selected-item)))
+     (t
+      (message "Nothing in clipboard yet!")))))
 
 ;;;###autoload
 (defun cliphist-copy-to-clipboard (str)
