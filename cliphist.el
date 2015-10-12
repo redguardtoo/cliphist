@@ -4,7 +4,7 @@
 ;;
 ;; Version: 0.1.0
 ;; Package-Requires: ((popup "0.5.0"))
-;; Keywords: clipobard manager history
+;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
 ;; URL: http://github.com/redguardtoo/cliphist
 
@@ -45,7 +45,7 @@
 
 (require 'popup)
 
-(defvar cliphist-popup-height 5 "Height of candidates popup.")
+(defvar cliphist-popup-height 9 "Height of candidates popup.")
 
 (defvar cliphist-item-summary-string-maxlength 32
   "Maximum string length of item summary displayed in menu")
@@ -61,11 +61,26 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 (autoload 'cliphist-flycut-read-items "cliphist-flycut" nil)
 (autoload 'cliphist-parcellite-read-items "cliphist-parcellite" nil)
 
+(defun cliphist-create-summary (stripped)
+  (let (rlt need-hint)
+    ;; get first 16 characters as summary
+    (setq rlt (substring-no-properties
+               stripped
+               0 (min (length stripped) cliphist-item-summary-string-maxlength)))
+    ;; friendly hint in summary that actual value is longer
+    (setq need-hint (< (length rlt) (length stripped)))
+    ;; remove cr&lf inside summary
+    (setq rlt (replace-regexp-in-string "[ \t\n]+" " " rlt))
+    (if need-hint (setq rlt (concat rlt " ...")))
+    rlt))
+
 (defun cliphist-add-item-to-cache (item-list str)
-  (let ((stripped (replace-regexp-in-string "\\(^[ \t\n\r]+\\|[ \t\n\r]+$\\)" "" str))
-        name item)
+  (let (stripped name item)
+    ;; trim the summary
+    (setq stripped (replace-regexp-in-string "\\(^[ \t\n\r]+\\|[ \t\n\r]+$\\)" "" str))
+    ;; don't paste item containing only white spaces
     (when (> (length stripped) 0)
-      (setq item (popup-make-item (substring-no-properties stripped 0 (min (length stripped) cliphist-item-summary-string-maxlength)) :value str))
+      (setq item (popup-make-item (cliphist-create-summary stripped) :value str))
       (add-to-list item-list item t)
       )))
 
