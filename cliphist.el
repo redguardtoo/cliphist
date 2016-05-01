@@ -119,13 +119,15 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
     rlt))
 
 (defun cliphist-add-item-to-cache (item-list str)
-  (let (stripped name item)
+  (let (stripped name)
     ;; trim the summary
     (setq stripped (replace-regexp-in-string "\\(^[ \t\n\r]+\\|[ \t\n\r]+$\\)" "" str))
     ;; don't paste item containing only white spaces
     (when (> (length stripped) 0)
-      (setq item (popup-make-item (cliphist-create-summary stripped) :value str))
-      (add-to-list item-list item t)
+      (add-to-list item-list
+                   (popup-make-item (cliphist-create-summary stripped) :value str)
+                   t)
+      (message "item-list=%s" item-list)
       )))
 
 ;;;###autoload
@@ -199,7 +201,16 @@ FN do the thing."
 (defun cliphist-paste-item ()
   "Paste selected item into current buffer."
   (interactive)
-  (cliphist-do-item 1 (lambda (num str) (insert str))))
+  (cliphist-do-item 1 (lambda (num str)
+                        ;; evil-mode?
+                        (when (and (functionp 'evil-normal-state-p)
+                                   (functionp 'evil-move-cursor-back)
+                                   (evil-normal-state-p)
+                                   (not (eolp))
+                                   (not (eobp)))
+                          (forward-char))
+                        ;; insert now
+                        (insert str))))
 
 ;;;###autoload
 (defun cliphist-select-item (&optional num)
