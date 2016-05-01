@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015 Chen Bin
 ;;
-;; Version: 0.2.0
+;; Version: 0.3.0
 ;; Package-Requires: ((popup "0.5.0"))
 ;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
@@ -37,6 +37,10 @@
 ;;   In popup, press `C-n' or `C-p' to navigate, other keys
 ;;   to filter.
 ;;
+;;   By default, we use popup.el to provides candidates window.
+;;   But you can use ivy-mode instead by installing Swiper and
+;;   `(setq cliphist-use-ivy t)'.
+;;
 ;;   You can customize the behavior of cliphist-select-item,
 ;;     (setq cliphist-select-item-callback
 ;;        (lambda (num str) (cliphist-copy-to-clipboard str)))
@@ -55,7 +59,8 @@
   "Maximum height of candidates popup.")
 
 (defvar cliphist-item-summary-string-maxlength 32
-  "Maximum string length of item summary displayed in menu.")
+  "Maximum string length of item summary displayed in popup menu.
+If ivy-mode is used, this flag is ignored.")
 
 (defvar cliphist-select-item-callback nil
   "The callback of `cliphist-select-item'.
@@ -65,8 +70,15 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 (defvar cliphist-items nil
   "Item list extracted from clipboard manager.")
 
+(defvar cliphist-use-ivy nil
+  "Use ivy-mode to display items.  Swiper7+ required.")
+
+
 (autoload 'cliphist-flycut-read-items "cliphist-flycut" nil)
 (autoload 'cliphist-parcellite-read-items "cliphist-parcellite" nil)
+
+(defun cliphist--ivy-usable ()
+  (and cliphist-use-ivy (fboundp 'ivy-read)))
 
 (defun cliphist--posn-col-row (posn)
   (let ((col (car (posn-col-row posn)))
@@ -98,10 +110,15 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
       (min below ideal-height))))
 
 (defun cliphist-create-summary (stripped)
-  (let (rlt need-hint)
-    (setq rlt (substring-no-properties
-               stripped
-               0 (min (length stripped) cliphist-item-summary-string-maxlength)))
+  (let (rlt need-hint summary-width)
+    (setq summary-width
+          (if (cliphist--ivy-usable)
+              ;; width of mini-buffer
+              (frame-width)
+            ;; user defined width
+            cliphist-item-summary-string-maxlength))
+    (setq rlt (substring-no-properties stripped
+                                       0 (min (length stripped) summary-width)))
     ;; friendly hint in summary that actual value is longer
     (setq need-hint (< (length rlt) (length stripped)))
     ;; remove cr&lf inside summary
@@ -125,9 +142,10 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
     ;; don't paste item containing only white spaces
     (when (> (length stripped) 0)
       (add-to-list item-list
-                   (popup-make-item (cliphist-create-summary stripped) :value str)
+                   (if (cliphist--ivy-usable)
+                       (cons (cliphist-create-summary stripped) str)
+                       (popup-make-item (cliphist-create-summary stripped) :value str))
                    t)
-      (message "item-list=%s" item-list)
       )))
 
 ;;;###autoload
@@ -154,15 +172,21 @@ FN do the thing."
     (cliphist-read-items)
     (cond
      ((and cliphist-items (> (length cliphist-items) 0))
-      (setq pseudo-height (cliphist-optimized-popup-height))
-      (when (setq selected-item
-                  (popup-menu* cliphist-items
-                               :point (if (>= pseudo-height 0) nil (cliphist-popup-position-above-point pseudo-height))
-                               ;; popup.el bug, when there is N lines above to show the popup
-                               ;; the actual height must be N-1
-                               :height (abs pseudo-height)
-                               ;; enable search by default
-                               :isearch t))
+      (setq selected-item
+            (cond
+             ((cliphist--ivy-usable)
+              (ivy-read "Clipboard items:"
+                        cliphist-items))
+             (t
+              (setq pseudo-height (cliphist-optimized-popup-height))
+              (popup-menu* cliphist-items
+                           :point (if (>= pseudo-height 0) nil (cliphist-popup-position-above-point pseudo-height))
+                           ;; popup.el bug, when there is N lines above to show the popup
+                           ;; the actual height must be N-1
+                           :height (abs pseudo-height)
+                           ;; enable search by default
+                           :isearch t))))
+      (when selected-item
         (funcall fn num selected-item)
         (if cliphist-cc-kill-ring (kill-new selected-item))))
      (t

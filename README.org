@@ -1,4 +1,4 @@
-* cliphist (v0.2.0)
+* cliphist (v0.3.0)
 
 [[http://melpa.org/#/find-and-ctags][file:http://melpa.org/packages/cliphist-badge.svg]] [[http://stable.melpa.org/#/find-and-ctags][file:http://stable.melpa.org/packages/cliphist-badge.svg]]
 
@@ -13,7 +13,12 @@ If you install from source code, please place cliphist.el somewhere (say ~/.emac
 (require 'cliphist)
 #+end_src
 
-[[https://github.com/auto-complete/popup-el][popup.el]] 5.0 is required as dependency.
+[[https://github.com/auto-complete/popup-el][popup.el]] 5.0 is required as dependency because it provides candidates window by default.
+
+But you can use [[https://github.com/abo-abo/swiper][Ivy-mode/Swiper]] instead of popup.el. Install Swiper manually and insert one liner into ~/.emacs,
+#+begin_src elisp
+(setq cliphist-use-ivy t)
+#+end_src
 
 * Usage
 Make sure the clipboard manager is running.
