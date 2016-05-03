@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015 Chen Bin
 ;;
-;; Version: 0.3.0
+;; Version: 0.3.1
 ;; Package-Requires: ((popup "0.5.0"))
 ;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
@@ -67,12 +67,11 @@ If ivy-mode is used, this flag is ignored.")
 If nil, selected item is copied to clipboard when `cliphist-select-item' called.
 Or else the `(funcall cliphist-select-item num item)' will be executed.")
 
-(defvar cliphist-items nil
-  "Item list extracted from clipboard manager.")
-
 (defvar cliphist-use-ivy nil
   "Use ivy-mode to display items.  Swiper7+ required.")
 
+(defvar cliphist-items nil
+  "Item list extracted from clipboard manager.  Internal variable.")
 
 (autoload 'cliphist-flycut-read-items "cliphist-flycut" nil)
 (autoload 'cliphist-parcellite-read-items "cliphist-parcellite" nil)
@@ -114,7 +113,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
     (setq summary-width
           (if (cliphist--ivy-usable)
               ;; width of mini-buffer
-              (frame-width)
+              (- (frame-width) 3) ; "summary.."
             ;; user defined width
             cliphist-item-summary-string-maxlength))
     (setq rlt (substring-no-properties stripped
@@ -123,7 +122,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
     (setq need-hint (< (length rlt) (length stripped)))
     ;; remove cr&lf inside summary
     (setq rlt (replace-regexp-in-string "[ \t\n]+" " " rlt))
-    (if need-hint (setq rlt (concat rlt " ...")))
+    (if need-hint (setq rlt (concat rlt "..")))
     rlt))
 
 (defun cliphist-popup-position-above-point (height)
@@ -164,31 +163,34 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
      (t (message "Sorry, only Linux and OS X are supported."))
      )))
 
-;;;###autoload
-(defun cliphist-do-item (num fn)
+(defmacro cliphist-do-item (num fn)
   "Select a item and do something.  Utility used by other commands.
 FN do the thing."
-  (let (selected-item pseudo-height)
+  `(let (pseudo-height)
     (cliphist-read-items)
     (cond
      ((and cliphist-items (> (length cliphist-items) 0))
-      (setq selected-item
-            (cond
-             ((cliphist--ivy-usable)
-              (ivy-read "Clipboard items:"
-                        cliphist-items))
-             (t
-              (setq pseudo-height (cliphist-optimized-popup-height))
-              (popup-menu* cliphist-items
-                           :point (if (>= pseudo-height 0) nil (cliphist-popup-position-above-point pseudo-height))
-                           ;; popup.el bug, when there is N lines above to show the popup
-                           ;; the actual height must be N-1
-                           :height (abs pseudo-height)
-                           ;; enable search by default
-                           :isearch t))))
-      (when selected-item
-        (funcall fn num selected-item)
-        (if cliphist-cc-kill-ring (kill-new selected-item))))
+      (cond
+       ((cliphist--ivy-usable)
+        (ivy-read "Clipboard items:"
+                  cliphist-items
+                  :action (lambda (item)
+                                  (funcall ,fn ,num item)
+                                  (if cliphist-cc-kill-ring (kill-new item)))))
+       (t
+        (setq pseudo-height (cliphist-optimized-popup-height))
+        (let ((selected-item
+               (popup-menu* cliphist-items
+                            :point (if (>= pseudo-height 0) nil (cliphist-popup-position-above-point pseudo-height))
+                            ;; popup.el bug, when there is N lines above to show the popup
+                            ;; the actual height must be N-1
+                            :height (abs pseudo-height)
+                            ;; enable search by default
+                            :isearch t)))
+          (when selected-item
+            (funcall ,fn ,num selected-item)
+            (if cliphist-cc-kill-ring (kill-new selected-item)))
+          ))))
      (t
       (message "Nothing in clipboard yet!")))))
 
