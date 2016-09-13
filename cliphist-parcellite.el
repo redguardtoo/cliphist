@@ -28,15 +28,14 @@
 (defun cliphist-parcellite-get-item-size (str len beg &optional short-int)
   "Scan STR whose length is LEN.  Start scanning from position BEG.
 If SHORT-INT is t, read 2 bytes.  Or else read 4 bytes."
-  (let (size)
+  (let* (size)
     ;; read 4 bytes in little endian order
     (if (< (+ beg 3) len)
         (setq size (+ (elt str beg)
                       (* 256 (elt str (+ 1 beg)))
                       (if short-int 0
                         (+ (* 256 256 (elt str (+ 2 beg)))
-                           (* 256 256 256 (elt str (+ 3 beg)))))
-                      )))
+                           (* 256 256 256 (elt str (+ 3 beg))))))))
     size))
 
 (defun cliphist-parcellite-read-item (str len item &optional is-new-version)
@@ -72,18 +71,19 @@ If IS-NEW-VERSION is t, it's Parcellite v1.0+."
   "For each item, First 4 bytes specify the size of content.
 It ends with 4 byte zeroed.  Please note byte are stored in little endian way.
 Extracted item will be passed to FN-INSERT."
-  (let (str item rlt str-len is-new-version path)
-    (setq path (file-truename "~/.local/share/parcellite/history"))
-    (setq str (with-temp-buffer
+  (let* ((path (file-truename "~/.local/share/parcellite/history"))
+         (str (with-temp-buffer
                 (set-buffer-multibyte nil)
                 (setq buffer-file-coding-system 'binary)
                 (insert-file-contents-literally path)
                 (buffer-substring-no-properties (point-min) (point-max))))
-    (setq str-len (length str))
-    ;; first 3 characters is "1.0"
-    (setq is-new-version (and (= (elt str 0) 49)
-                         (= (elt str 1) 46)
-                         (= (elt str 2) 48)))
+         (str-len (length str))
+         ;; first 3 characters is "1.0"
+         (is-new-version (and (= (elt str 0) 49)
+                              (= (elt str 1) 46)
+                              (= (elt str 2) 48)))
+         item
+         rlt)
 
     ;; read clipboard items into cache
     (while (setq item (cliphist-parcellite-read-item str str-len item is-new-version))

@@ -80,10 +80,10 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
   (and cliphist-use-ivy (fboundp 'ivy-read)))
 
 (defun cliphist--posn-col-row (posn)
-  (let ((col (car (posn-col-row posn)))
-        ;; `posn-col-row' doesn't work well with lines of different height.
-        ;; `posn-actual-col-row' doesn't handle multiple-width characters.
-        (row (cdr (posn-actual-col-row posn))))
+  (let* ((col (car (posn-col-row posn)))
+         ;; `posn-col-row' doesn't work well with lines of different height.
+         ;; `posn-actual-col-row' doesn't handle multiple-width characters.
+         (row (cdr (posn-actual-col-row posn))))
     (when (and header-line-format (version< emacs-version "24.3.93.3"))
       ;; http://debbugs.gnu.org/18384
       (cl-decf row))
@@ -109,17 +109,14 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
       (min below ideal-height))))
 
 (defun cliphist-create-summary (stripped)
-  (let (rlt need-hint summary-width)
-    (setq summary-width
-          (if (cliphist--ivy-usable)
-              ;; width of mini-buffer
-              (- (frame-width) 3) ; "summary.."
-            ;; user defined width
-            cliphist-item-summary-string-maxlength))
-    (setq rlt (substring-no-properties stripped
-                                       0 (min (length stripped) summary-width)))
-    ;; friendly hint in summary that actual value is longer
-    (setq need-hint (< (length rlt) (length stripped)))
+  (let* ((summary-width (if (cliphist--ivy-usable)
+                            ;; width of mini-buffer
+                            (- (frame-width) 3) ; "summary.."
+                          ;; user defined width
+                          cliphist-item-summary-string-maxlength))
+         (rlt (substring-no-properties stripped 0 (min (length stripped) summary-width)))
+         ;; friendly hint in summary that actual value is longer
+         (need-hint (< (length rlt) (length stripped))))
     ;; remove cr&lf inside summary
     (setq rlt (replace-regexp-in-string "[ \t\n]+" " " rlt))
     (if need-hint (setq rlt (concat rlt "..")))
@@ -127,30 +124,28 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 
 (defun cliphist-popup-position-above-point (height)
   "Height is negative"
-  (let (rlt
-        (lines-backward (abs height)))
+  (let* (rlt
+         (lines-backward (abs height)))
     (save-excursion
       (forward-line (- (1+ lines-backward)))
       (setq rlt (point)))
     rlt))
 
 (defun cliphist-add-item-to-cache (item-list str)
-  (let (stripped name)
-    ;; trim the summary
-    (setq stripped (replace-regexp-in-string "\\(^[ \t\n\r]+\\|[ \t\n\r]+$\\)" "" str))
+  (let* ((stripped (replace-regexp-in-string "\\(^[ \t\n\r]+\\|[ \t\n\r]+$\\)" "" str))
+         name)
     ;; don't paste item containing only white spaces
     (when (> (length stripped) 0)
       (add-to-list item-list
                    (if (cliphist--ivy-usable)
                        (cons (cliphist-create-summary stripped) str)
-                       (popup-make-item (cliphist-create-summary stripped) :value str))
-                   t)
-      )))
+                     (popup-make-item (cliphist-create-summary stripped) :value str))
+                   t))))
 
 ;;;###autoload
 (defun cliphist-read-items ()
   (interactive)
-  (let (rlt)
+  (let* (rlt)
     (cond
      ((eq system-type 'darwin)
       ;; if nothing in clipboard, avoid purging the cache in Emacs
@@ -215,7 +210,8 @@ FN do the thing."
           ((memq system-type '(gnu gnu/linux gnu/kfreebsd))
            (with-temp-buffer
              (insert str)
-             (if (file-executable-p "xsel") (call-process-region (point-min) (point-max) "xsel" nil nil nil "--clipboard" "--input")
+             (if (file-executable-p "xsel")
+                 (call-process-region (point-min) (point-max) "xsel" nil nil nil "--clipboard" "--input")
                (call-process-region (point-min) (point-max) "xclip" nil nil nil "-selection clipboard" "--input"))
              ))
           (t
