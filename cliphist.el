@@ -120,7 +120,8 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
     ;; remove cr&lf inside summary
     (setq rlt (replace-regexp-in-string "[ \t\n]+" " " rlt))
     (if need-hint (setq rlt (concat rlt "..")))
-    rlt))
+    ;; #6 make sure we return plain string as summary
+    (substring-no-properties rlt 0 (length rlt))))
 
 (defun cliphist-popup-position-above-point (height)
   "Height is negative"
