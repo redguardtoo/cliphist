@@ -89,6 +89,9 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
       (cl-decf row))
     (cons (+ col (window-hscroll)) row)))
 
+(defun cliphist--strip (str)
+  (replace-regexp-in-string "\\(^[ \t\n\r]+\\|[ \t\n\r]+$\\)" "" str))
+
 (defun cliphist-row (&optional pos)
   "The row position of cursort in current window"
   (interactive)
@@ -108,6 +111,9 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
         (- (min lines ideal-height))
       (min below ideal-height))))
 
+(defun cliphist-create-stripped-summary (str)
+  (cliphist-create-summary (cliphist--strip str)))
+
 (defun cliphist-create-summary (stripped)
   (let* ((summary-width (if (cliphist--ivy-usable)
                             ;; width of mini-buffer
@@ -120,8 +126,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
     ;; remove cr&lf inside summary
     (setq rlt (replace-regexp-in-string "[ \t\n]+" " " rlt))
     (if need-hint (setq rlt (concat rlt "..")))
-    ;; #6 make sure we return plain string as summary
-    (substring-no-properties rlt 0 (length rlt))))
+    rlt))
 
 (defun cliphist-popup-position-above-point (height)
   "Height is negative"
@@ -133,15 +138,14 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
     rlt))
 
 (defun cliphist-add-item-to-cache (item-list str)
-  (let* ((stripped (replace-regexp-in-string "\\(^[ \t\n\r]+\\|[ \t\n\r]+$\\)" "" str))
-         name)
+  (let* ((stripped (cliphist--strip str)))
     ;; don't paste item containing only white spaces
-    (when (> (length stripped) 0)
-      (add-to-list item-list
-                   (if (cliphist--ivy-usable)
-                       (cons (cliphist-create-summary stripped) str)
-                     (popup-make-item (cliphist-create-summary stripped) :value str))
-                   t))))
+    (if (> (length stripped) 0)
+        (add-to-list item-list
+                     (if (cliphist--ivy-usable) str
+                       (popup-make-item (cliphist-create-summary stripped) :value str))
+                     t))))
+
 
 ;;;###autoload
 (defun cliphist-read-items ()
@@ -168,11 +172,19 @@ FN do the thing."
      ((and cliphist-items (> (length cliphist-items) 0))
       (cond
        ((cliphist--ivy-usable)
-        (ivy-read "Clipboard items:"
-                  cliphist-items
-                  :action (lambda (item)
-                                  (funcall ,fn ,num item)
-                                  (if cliphist-cc-kill-ring (kill-new item)))))
+        (unless (featurep 'ivy) (require 'ivy))
+        (let* ((ivy-format-function (lambda (cands)
+                                      (ivy--format-function-generic
+                                       (lambda (str)
+                                         (ivy--add-face (cliphist-create-stripped-summary str) 'ivy-current-match))
+                                       #'cliphist-create-stripped-summary
+                                       cands
+                                       "\n"))))
+          (ivy-read "Clipboard items:"
+                    cliphist-items
+                    :action (lambda (item)
+                              (funcall ,fn ,num item)
+                              (if cliphist-cc-kill-ring (kill-new item))))))
        (t
         (setq pseudo-height (cliphist-optimized-popup-height))
         (let ((selected-item
