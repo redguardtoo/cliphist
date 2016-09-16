@@ -1,6 +1,6 @@
 ;;; cliphist-flycut.el --- read flycut data file
 
-;; Copyright (C) 2015 Chen Bin
+;; Copyright (C) 2015-2016 Chen Bin
 
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
 
@@ -27,19 +27,17 @@
 
 (defun cliphist-flycut-decode-xml-string (string)
   "Decode STRING from xml encoded format."
-  (let (str)
-    (setq str
-          (with-temp-buffer
-            (insert string)
-            (dolist (substitution '(("&" . "&amp;")
-                                    ("&lt;" . "<")
-                                    ("&gt;" . ">" )
-                                    ("&apos;" . "'")
-                                    ("&quot;" . "\"")))
-              (goto-char (point-min))
-              (while (search-forward (car substitution) nil t)
-                (replace-match (cdr substitution) t t nil)))
-            (buffer-substring-no-properties (point-min) (point-max))))
+  (let* ((str (with-temp-buffer
+           (insert string)
+           (dolist (substitution '(("&lt;" . "<")
+                                   ("&gt;" . ">" )
+                                   ("&apos;" . "'")
+                                   ("&quot;" . "\"")
+                                   ("&amp;" . "&")))
+             (goto-char (point-min))
+             (while (search-forward (car substitution) nil t)
+               (replace-match (cdr substitution) t t nil)))
+           (buffer-substring-no-properties (point-min) (point-max)))))
     (decode-coding-string str 'utf-8)))
 
 (defun cliphist-flycut-read-items (fn-insert)
