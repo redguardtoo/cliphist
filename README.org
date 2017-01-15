@@ -1,12 +1,15 @@
-* cliphist (v0.4.0)
+* cliphist (v0.5.0)
 
 [[http://melpa.org/#/find-and-ctags][file:http://melpa.org/packages/cliphist-badge.svg]] [[http://stable.melpa.org/#/find-and-ctags][file:http://stable.melpa.org/packages/cliphist-badge.svg]]
 
-Read clipboard history from [[http://parcellite.sourceforge.net/][Parcellite]] on Linux and [[https://github.com/TermiT/Flycut][Flycut]] on OS X.
+Read data from clipboard managers at Linux and Mac,
+- [[http://parcellite.sourceforge.net/][Parcellite]] on Linux
+- [[http://clipit.sourceforge.net/][ClipIt]] on Linux
+- [[https://github.com/TermiT/Flycut][Flycut]] on Mac
 * Install
 The easiest way is install from [[http://melpa.org][melpa]] using package manager.
 
-If you install from source code, please place cliphist.el somewhere (say ~/.emacs/lisp), and insert below code into ".emacs":
+If you install from source code, please place cliphist.el somewhere (say =~/.emacs/lisp=), and insert below code into =~/.emacs=:
 
 #+begin_src elisp
 (add-to-list 'load-path "~/.emacs.d/lisp/")
@@ -15,7 +18,7 @@ If you install from source code, please place cliphist.el somewhere (say ~/.emac
 
 [[https://github.com/auto-complete/popup-el][popup.el]] 5.0 is required as dependency because it provides candidates window by default.
 
-But you can use [[https://github.com/abo-abo/swiper][Ivy-mode/Swiper]] instead of popup.el. Install Swiper manually and insert one liner into ~/.emacs,
+But you can use [[https://github.com/abo-abo/swiper][Ivy-mode/Swiper]] instead of popup.el. Install Swiper manually and insert one liner into =~/.emacs=,
 #+begin_src elisp
 (setq cliphist-use-ivy t)
 #+end_src
@@ -23,10 +26,10 @@ But you can use [[https://github.com/abo-abo/swiper][Ivy-mode/Swiper]] instead o
 * Usage
 Make sure the clipboard manager is running.
 
-- `M-x cliphist-paste-item' to paste item from history
-- `M-x cliphist-select-item' to select item
+- =M-x cliphist-paste-item= to paste item from history
+- =M-x cliphist-select-item= to select item
 
-In popup, press `C-n' or `C-p' to navigate, other keys to filter.
+In popup, press =C-n= or =C-p= to navigate, other keys to filter.
 * Advanced Tips (OPTIONAL)
 ** Tip 1
 You can customize the behavior of cliphist-select-item,
@@ -38,6 +41,11 @@ You can customize the behavior of cliphist-select-item,
 If `cliphist-cc-kill-ring` is true, the selected/pasted string will be inserted into kill-ring.
 #+begin_src elisp
 (setq cliphist-cc-kill-ring t)
+#+end_src
+** Tip 3
+You can tweak =cliphist-linux-clipboard-managers= to tell cliphist how to detect clipboard manager,
+#+begin_src elisp
+(setq cliphist-linux-clipboard-managers '("clipit" "parcellite"))
 #+end_src
 * Bug Report
 Check [[https://github.com/redguardtoo/cliphist]].

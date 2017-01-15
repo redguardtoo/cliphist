@@ -1,8 +1,8 @@
-;;; cliphist.el --- Read clipboard history from Parcellite on Linux and Flycut on OS X
+;;; cliphist.el --- Read data from clipboard managers at Linux and Mac
 
 ;; Copyright (C) 2015-2016 Chen Bin
 ;;
-;; Version: 0.4.0
+;; Version: 0.5.0
 ;; Package-Requires: ((popup "0.5.0"))
 ;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
@@ -27,8 +27,9 @@
 ;;; Commentary:
 
 ;; Read clipboard items from following clipboard managers,
-;;   - Parcellite (http://parcellite.sourceforge.net)
-;;   - Flycut (https://github.com/TermiT/Flycut)
+;;   - Parcellite (http://parcellite.sourceforge.net) at Linux
+;;   - ClipIt (http://clipit.sourceforge.net) at Linux
+;;   - Flycut (https://github.com/TermiT/Flycut) on OSX
 ;;
 ;; Usage:
 ;;   Make sure clipboard manager is running.
@@ -47,10 +48,18 @@
 ;;
 ;;   If `cliphist-cc-kill-ring' is true, the selected/pasted string
 ;;   will be inserted into kill-ring
+;;
+;; You can tweak =cliphist-linux-clipboard-managers= to tell cliphist
+;; how to detect clipboard manager:
+;;   `(setq cliphist-linux-clipboard-managers '("clipit" "parcellite"))'
 
 ;;; Code:
 
 (require 'popup)
+
+(defvar cliphist-linux-clipboard-managers
+  '("parcellite" "clipit")
+  "We will try to detect the clipboard manager one by one.")
 
 (defvar cliphist-cc-kill-ring nil
   "Copy the selected/pasted item into kill ring.")
@@ -75,6 +84,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 
 (autoload 'cliphist-flycut-read-items "cliphist-flycut" nil)
 (autoload 'cliphist-parcellite-read-items "cliphist-parcellite" nil)
+(autoload 'cliphist-clipit-read-items "cliphist-parcellite" nil)
 
 (defun cliphist--ivy-usable ()
   (and cliphist-use-ivy (fboundp 'ivy-read)))
@@ -153,7 +163,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 ;;;###autoload
 (defun cliphist-read-items ()
   (interactive)
-  (let* (rlt)
+  (let* (rlt i)
     (cond
      ((eq system-type 'darwin)
       ;; if nothing in clipboard, avoid purging the cache in Emacs
@@ -161,10 +171,15 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
           (setq cliphist-items rlt)))
      ((or (eq system-type 'gnu/linux) (eq system-type 'linux))
       ;; if nothing in clipboard, avoid purging the cache in Emacs
-      (if (setq rlt (cliphist-parcellite-read-items 'cliphist-add-item-to-cache))
-          (setq cliphist-items rlt)))
-     (t (message "Sorry, only Linux and OS X are supported."))
-     )))
+      (setq i 0)
+      (while (and (not rlt)
+                  (< i (length cliphist-linux-clipboard-managers)))
+        (setq rlt (funcall (intern (format "cliphist-%s-read-items"
+                                           (nth i cliphist-linux-clipboard-managers)))
+                           'cliphist-add-item-to-cache))
+        (setq i (+ 1 i))))
+     (t (message "Sorry, only Linux and Mac are supported.")))
+    rlt))
 
 (defmacro cliphist-do-item (num fn)
   "Select a item and do something.  Utility used by other commands.
