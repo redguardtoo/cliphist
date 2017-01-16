@@ -1,4 +1,4 @@
-* cliphist (v0.5.0)
+* cliphist (v0.5.1)
 
 [[http://melpa.org/#/find-and-ctags][file:http://melpa.org/packages/cliphist-badge.svg]] [[http://stable.melpa.org/#/find-and-ctags][file:http://stable.melpa.org/packages/cliphist-badge.svg]]
 

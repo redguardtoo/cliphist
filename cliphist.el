@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015-2016 Chen Bin
 ;;
-;; Version: 0.5.0
+;; Version: 0.5.1
 ;; Package-Requires: ((popup "0.5.0"))
 ;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
@@ -84,7 +84,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 
 (autoload 'cliphist-flycut-read-items "cliphist-flycut" nil)
 (autoload 'cliphist-parcellite-read-items "cliphist-parcellite" nil)
-(autoload 'cliphist-clipit-read-items "cliphist-parcellite" nil)
+(autoload 'cliphist-clipit-read-items "cliphist-clipit" nil)
 
 (defun cliphist--ivy-usable ()
   (and cliphist-use-ivy (fboundp 'ivy-read)))
