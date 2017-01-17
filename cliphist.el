@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015-2016 Chen Bin
 ;;
-;; Version: 0.5.1
+;; Version: 0.5.2
 ;; Package-Requires: ((popup "0.5.0"))
 ;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
@@ -177,7 +177,8 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
         (setq rlt (funcall (intern (format "cliphist-%s-read-items"
                                            (nth i cliphist-linux-clipboard-managers)))
                            'cliphist-add-item-to-cache))
-        (setq i (+ 1 i))))
+        (setq i (+ 1 i)))
+      (if rlt (setq cliphist-items rlt)))
      (t (message "Sorry, only Linux and Mac are supported.")))
     rlt))
 
