@@ -25,6 +25,8 @@
 
 ;;; Code:
 
+(require 'xml)
+
 (defun cliphist-flycut-decode-xml-string (string)
   "Decode STRING from xml encoded format."
   (let* ((str (with-temp-buffer
@@ -40,13 +42,22 @@
            (buffer-substring-no-properties (point-min) (point-max)))))
     (decode-coding-string str 'utf-8)))
 
-(defun cliphist-flycut-read-items (fn-insert)
+(defun cliphist-flycut-read-items (&optional fn-insert)
   "Flycut store the data in xml file.
 We use regex to extract the clipboard item.
 Then call FN-INSERT to insert the item into the list which returned by this function."
-  (let (arr str rlt b e path)
-    ;; (setq path (file-truename "~/projs/cliphist/data/flycut/com.generalarcade.flycut.plist")) ; debug
-    (setq path (file-truename "~/Library/Application Support/Flycut/com.generalarcade.flycut.plist"))
+  (let* (arr
+         str
+         rlt
+         b
+         e
+         ;; (path (file-truename "~/Library/Application Support/Flycut/com.generalarcade.flycut.plist"))
+         (path (file-truename "~/projs/cliphist/data/flycut/com.generalarcade.flycut.plist"))
+         (xml-tree (xml-parse-file path)))
+    (message "xml-tree=%s
+node-name=%s" xml-tree (xml-node-children xml-tree))
+    (setq rlt (xml-get-children xml-tree "dict"))
+    (message "rlt=%s" rlt)
     (with-temp-buffer
       (set-buffer-multibyte nil)
       (setq buffer-file-coding-system 'binary)
@@ -68,8 +79,7 @@ Then call FN-INSERT to insert the item into the list which returned by this func
             (setq b (+ (length s2) (string-match s2 item b)))
             (setq e (string-match s3 item b))
             ;; insert item into rlt
-            (funcall fn-insert 'rlt (cliphist-flycut-decode-xml-string (substring item b e)))
-            )))
+            (if fn-insert (funcall fn-insert 'rlt (cliphist-flycut-decode-xml-string (substring item b e)))))))
     rlt))
 
 (provide 'cliphist-flycut)
