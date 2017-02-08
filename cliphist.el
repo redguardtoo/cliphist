@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015-2016 Chen Bin
 ;;
-;; Version: 0.5.2
+;; Version: 0.5.3
 ;; Package-Requires: ((popup "0.5.0"))
 ;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
@@ -158,7 +158,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 
 ;;;###autoload
 (defun cliphist-version ()
-  (message "0.0.4"))
+  (message "0.5.3"))
 
 ;;;###autoload
 (defun cliphist-read-items ()

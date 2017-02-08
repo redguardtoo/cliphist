@@ -25,51 +25,47 @@
 
 ;;; Code:
 
-(defun cliphist-flycut-decode-xml-string (string)
-  "Decode STRING from xml encoded format."
-  (let* ((str (with-temp-buffer
-           (insert string)
-           (dolist (substitution '(("&lt;" . "<")
-                                   ("&gt;" . ">" )
-                                   ("&apos;" . "'")
-                                   ("&quot;" . "\"")
-                                   ("&amp;" . "&")))
-             (goto-char (point-min))
-             (while (search-forward (car substitution) nil t)
-               (replace-match (cdr substitution) t t nil)))
-           (buffer-substring-no-properties (point-min) (point-max)))))
-    (decode-coding-string str 'utf-8)))
+(require 'xml)
 
-(defun cliphist-flycut-read-items (fn-insert)
+(defun cliphist-find-xml-node-containting-items (items)
+  "We need node type is `key' and value is `displayLen'."
+  (let* (rlt
+         child
+         (i 0))
+    (while (and (not rlt)
+                (< i (length items)))
+      (setq child (nth 0 (xml-get-children (nth i items) 'key)))
+      (if (and (eq (car child) 'key)
+               (string= (nth 2 child) "displayLen"))
+          (setq rlt (xml-get-children (car (xml-get-children (nth i items) 'array))
+                                      'dict)))
+      (setq i (+ i 1)))
+    rlt))
+
+(defun cliphist-flycut-guess-preference-path ()
+  (let* ((rlt (file-truename "~/Library/Preferences/com.generalarcade.flycut.plist")))
+    (unless (file-exists-p rlt)
+      (setq rlt (file-truename "~/Library/Application Support/Flycut/com.generalarcade.flycut.plist")))
+    rlt))
+
+(defun cliphist-flycut-read-items (&optional fn-insert)
   "Flycut store the data in xml file.
 We use regex to extract the clipboard item.
 Then call FN-INSERT to insert the item into the list which returned by this function."
-  (let (arr str rlt b e path)
-    ;; (setq path (file-truename "~/projs/cliphist/data/flycut/com.generalarcade.flycut.plist")) ; debug
-    (setq path (file-truename "~/Library/Application Support/Flycut/com.generalarcade.flycut.plist"))
-    (with-temp-buffer
-      (set-buffer-multibyte nil)
-      (setq buffer-file-coding-system 'binary)
-      (insert-file-contents-literally path)
-      (setq b (re-search-forward "<array>" (point-max) t))
-      (setq e (- (re-search-forward "</array>" (point-max) t) 8))
-      (setq str (buffer-substring-no-properties b e)))
-
-    ;; hate xml, string matching is ACTUALLY more elegant.
-    (setq arr (split-string str "\\(^[\t \r\n]*<dict>[\t \r\n]*\\|[\t \r\n]*</dict>[\t \r\n]*<dict>[\t \r\n]*\\|[\t \r\n]*</dict>[\t \r\n]*$\\)"))
-    (dolist (item arr)
-
-      (if (string-match "<string>NSStringPboardType</string>" item)
-          (let ((s1 "<key>Contents</key>")
-                (s2 "<string>")
-                (s3 "</string>")
-                b e)
-            (setq b (+ (length s1) (string-match s1 item)))
-            (setq b (+ (length s2) (string-match s2 item b)))
-            (setq e (string-match s3 item b))
-            ;; insert item into rlt
-            (funcall fn-insert 'rlt (cliphist-flycut-decode-xml-string (substring item b e)))
-            )))
+  (let* (rlt
+         (path (cliphist-flycut-guess-preference-path))
+         ;; (path (file-truename "~/projs/cliphist/data/flycut/com.generalarcade.flycut.plist"))
+         (xml-tree (cadr (xml-node-children (car (xml-parse-file path)))))
+         (arr (cliphist-find-xml-node-containting-items (xml-get-children xml-tree 'dict))))
+    (when arr
+      (dolist (item arr)
+        (let* ((strs (xml-get-children item 'string)))
+          ;; strs is two xml node:
+          ;;   (string nil calculate)
+          ;;   (string nil NSStringPboardType)
+          (if (and (string= "NSStringPboardType" (nth 2 (cadr strs)))
+                   fn-insert)
+              (funcall fn-insert 'rlt (nth 2 (car strs)))))))
     rlt))
 
 (provide 'cliphist-flycut)

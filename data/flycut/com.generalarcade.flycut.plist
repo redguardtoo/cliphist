@@ -55,7 +55,7 @@
 			</dict>
 			<dict>
 				<key>Contents</key>
-				<string>path</string>
+				<string>path&amp;test&lg;abc&gt;hello</string>
 				<key>Position</key>
 				<integer>1</integer>
 				<key>Type</key>
