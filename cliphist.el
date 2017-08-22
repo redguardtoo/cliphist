@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015-2016 Chen Bin
 ;;
-;; Version: 0.5.3
+;; Version: 0.5.4
 ;; Package-Requires: ((popup "0.5.0"))
 ;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
@@ -34,6 +34,7 @@
 ;; Usage:
 ;;   Make sure clipboard manager is running.
 ;;   `M-x cliphist-paste-item' to paste item from history
+;;   `C-u M-x cliphist-paste-item' rectangle paste item
 ;;   `M-x cliphist-select-item' to select item
 ;;   In popup, press `C-n' or `C-p' to navigate, other keys
 ;;   to filter.
@@ -158,7 +159,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 
 ;;;###autoload
 (defun cliphist-version ()
-  (message "0.5.3"))
+  (message "0.5.4"))
 
 ;;;###autoload
 (defun cliphist-read-items ()
@@ -251,20 +252,27 @@ FN do the thing."
        (error
         (error "Clipboard support not available"))))))
 
+(defun cliphist-routine-before-insert ()
+  "Make string insertion in `evil-normal-state' work."
+  (when (and (functionp 'evil-normal-state-p)
+             (functionp 'evil-move-cursor-back)
+             (evil-normal-state-p)
+             (not (eolp))
+             (not (eobp)))
+    (forward-char)))
+
 ;;;###autoload
-(defun cliphist-paste-item ()
-  "Paste selected item into current buffer."
-  (interactive)
-  (cliphist-do-item 1 (lambda (num str)
-                        ;; evil-mode?
-                        (when (and (functionp 'evil-normal-state-p)
-                                   (functionp 'evil-move-cursor-back)
-                                   (evil-normal-state-p)
-                                   (not (eolp))
-                                   (not (eobp)))
-                          (forward-char))
-                        ;; insert now
-                        (insert str))))
+(defun cliphist-paste-item (&optional rect-paste)
+  "Paste selected item into current buffer.
+Rectangle paste the item if arg RECT-PASTE is non-nil."
+  (interactive "P")
+  (cliphist-do-item 1 `(lambda (num str)
+                         ;; evil-mode?
+                         (cliphist-routine-before-insert)
+                         ;; insert now
+                         (if ,rect-paste
+                             (insert-rectangle (split-string str "[\r]?\n"))
+                           (insert str)))))
 
 ;;;###autoload
 (defun cliphist-select-item (&optional num)
