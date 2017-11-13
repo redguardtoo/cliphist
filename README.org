@@ -1,4 +1,4 @@
-* cliphist (v0.5.4)
+* cliphist (v0.5.5)
 
 [[http://melpa.org/#/find-and-ctags][file:http://melpa.org/packages/cliphist-badge.svg]] [[http://stable.melpa.org/#/find-and-ctags][file:http://stable.melpa.org/packages/cliphist-badge.svg]]
 
@@ -16,20 +16,12 @@ If you install from source code, please place cliphist.el somewhere (say =~/.ema
 (require 'cliphist)
 #+end_src
 
-[[https://github.com/auto-complete/popup-el][popup.el]] 5.0 is required as dependency because it provides candidates window by default.
-
-But you can use [[https://github.com/abo-abo/swiper][Ivy-mode/Swiper]] instead of popup.el. Install Swiper manually and insert one liner into =~/.emacs=,
-#+begin_src elisp
-(setq cliphist-use-ivy t)
-#+end_src
-
 * Usage
 Make sure the clipboard manager is running.
 
 - =M-x cliphist-paste-item= to paste item from history. =C-u M-x cliphist-paste-item= rectangle paste item
 - =M-x cliphist-select-item= to select item
 
-In popup, press =C-n= or =C-p= to navigate, other keys to filter.
 * Advanced Tips (OPTIONAL)
 ** Tip 1
 You can customize the behavior of cliphist-select-item,
@@ -51,8 +43,6 @@ You can tweak =cliphist-linux-clipboard-managers= to tell cliphist how to detect
 Check [[https://github.com/redguardtoo/cliphist]].
 
 * License
-Copyright (C) 2015 Chen Bin
-
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.

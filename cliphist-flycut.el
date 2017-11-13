@@ -1,6 +1,6 @@
 ;;; cliphist-flycut.el --- read flycut data file
 
-;; Copyright (C) 2015-2016 Chen Bin
+;; Copyright (C) 2015-2017 Chen Bin
 
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
 

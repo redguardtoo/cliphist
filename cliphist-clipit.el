@@ -1,6 +1,6 @@
 ;;; cliphist-clipit.el --- read parcelllite data file
 
-;; Copyright (C) 2015-2016 Chen Bin
+;; Copyright (C) 2015-2017 Chen Bin
 
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
 
@@ -61,20 +61,22 @@ Please note bytes are stored in little endian way.
 Number and boolean flag takes 4 bytes.
 Extracted item will be passed to FN-INSERT."
   (let* ((path (file-truename "~/.local/share/clipit/history"))
-         (str (with-temp-buffer
-                (set-buffer-multibyte nil)
-                (setq buffer-file-coding-system 'binary)
-                (insert-file-contents-literally path)
-                (buffer-substring-no-properties (point-min) (point-max))))
-         (str-len (length str))
+         str
+         str-len
          item
          rlt)
-
-    ;; read clipboard items into cache
-    (while (setq item (cliphist-clipit-read-item str str-len item))
-      ;; filter out short strings
-      (unless (< (length (car item)) 3)
-        (funcall fn-insert 'rlt (decode-coding-string (car item) 'utf-8))))
+    (when (file-exists-p path)
+      (setq str (with-temp-buffer
+                  (set-buffer-multibyte nil)
+                  (setq buffer-file-coding-system 'binary)
+                  (insert-file-contents-literally path)
+                  (buffer-substring-no-properties (point-min) (point-max))))
+      (setq str-len (length str))
+      ;; read clipboard items into cache
+      (while (setq item (cliphist-clipit-read-item str str-len item))
+        ;; filter out short strings
+        (unless (< (length (car item)) 3)
+          (funcall fn-insert 'rlt (decode-coding-string (car item) 'utf-8)))))
     rlt))
 
 (provide 'cliphist-clipit)

@@ -1,6 +1,6 @@
 ;;; cliphist-parcellite.el --- read parcelllite data file
 
-;; Copyright (C) 2015-2016 Chen Bin
+;; Copyright (C) 2015-2017 Chen Bin
 
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
 
@@ -72,24 +72,27 @@ If IS-NEW-VERSION is t, it's Parcellite v1.0+."
 It ends with 4 byte zeroed.  Please note byte are stored in little endian way.
 Extracted item will be passed to FN-INSERT."
   (let* ((path (file-truename "~/.local/share/parcellite/history"))
-         (str (with-temp-buffer
-                (set-buffer-multibyte nil)
-                (setq buffer-file-coding-system 'binary)
-                (insert-file-contents-literally path)
-                (buffer-substring-no-properties (point-min) (point-max))))
-         (str-len (length str))
-         ;; first 3 characters is "1.0"
-         (is-new-version (and (= (elt str 0) 49)
-                              (= (elt str 1) 46)
-                              (= (elt str 2) 48)))
+         str
+         str-len
+         is-new-version
          item
          rlt)
-
-    ;; read clipboard items into cache
-    (while (setq item (cliphist-parcellite-read-item str str-len item is-new-version))
-      ;; filter out short strings
-      (unless (< (length (car item)) 3)
-        (funcall fn-insert 'rlt (decode-coding-string (car item) 'utf-8))))
+    (when (file-exists-p path)
+      (setq str (with-temp-buffer
+                  (set-buffer-multibyte nil)
+                  (setq buffer-file-coding-system 'binary)
+                  (insert-file-contents-literally path)
+                  (buffer-substring-no-properties (point-min) (point-max))))
+      (setq str-len (length str))
+      ;; first 3 characters is "1.0"
+      (setq is-new-version (and (= (elt str 0) 49)
+                                (= (elt str 1) 46)
+                                (= (elt str 2) 48)))
+      ;; read clipboard items into cache
+      (while (setq item (cliphist-parcellite-read-item str str-len item is-new-version))
+        ;; filter out short strings
+        (unless (< (length (car item)) 3)
+          (funcall fn-insert 'rlt (decode-coding-string (car item) 'utf-8)))))
     rlt))
 
 (provide 'cliphist-parcellite)
