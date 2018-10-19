@@ -1,6 +1,6 @@
 * cliphist (v0.5.5)
 
-[[http://melpa.org/#/find-and-ctags][file:http://melpa.org/packages/cliphist-badge.svg]] [[http://stable.melpa.org/#/find-and-ctags][file:http://stable.melpa.org/packages/cliphist-badge.svg]]
+[[http://melpa.org/#/cliphist][file:http://melpa.org/packages/cliphist-badge.svg]] [[http://stable.melpa.org/#/cliphist][file:http://stable.melpa.org/packages/cliphist-badge.svg]]
 
 Read data from clipboard managers at Linux and Mac,
 - [[http://parcellite.sourceforge.net/][Parcellite]] on Linux
