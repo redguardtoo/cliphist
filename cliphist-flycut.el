@@ -49,9 +49,8 @@
     rlt))
 
 (defun cliphist-flycut-read-items (&optional fn-insert)
-  "Flycut store the data in xml file.
-We use regex to extract the clipboard item.
-Then call FN-INSERT to insert the item into the list which returned by this function."
+  "Flycut store the data in xml file where item is extracted.
+FN-INSERT inserts the item into the list which returned by this function."
   (let* (rlt
          (path (cliphist-flycut-guess-preference-path))
          ;; (path (file-truename "~/projs/cliphist/data/flycut/com.generalarcade.flycut.plist"))
