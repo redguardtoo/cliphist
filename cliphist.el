@@ -1,8 +1,8 @@
 ;;; cliphist.el --- Read data from clipboard managers at Linux and Mac
 
-;; Copyright (C) 2015-2017 Chen Bin
+;; Copyright (C) 2015-2019 Chen Bin
 ;;
-;; Version: 0.5.5
+;; Version: 0.5.6
 ;; Package-Requires: ((emacs "24.3") (ivy "0.9.0"))
 ;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
@@ -110,7 +110,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 
 ;;;###autoload
 (defun cliphist-version ()
-  (message "0.5.5"))
+  (message "0.5.6"))
 
 ;;;###autoload
 (defun cliphist-read-items ()
