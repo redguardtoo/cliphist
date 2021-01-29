@@ -55,6 +55,8 @@ It's decided by Flycut version."
   (let* ((rlt (file-truename "~/Library/Preferences/com.generalarcade.flycut.plist")))
     (unless (file-exists-p rlt)
       (setq rlt (file-truename "~/Library/Application Support/Flycut/com.generalarcade.flycut.plist")))
+    (unless (file-exists-p rlt)
+      (setq rlt (file-truename "~/Library/Containers/com.generalarcade.flycut/Data/Library/Preferences/com.generalarcade.flycut.plist")))
     rlt))
 
 (defun cliphist-flycut-is-bplist ()
