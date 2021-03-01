@@ -1,11 +1,12 @@
-* cliphist (v0.5.6)
-
-[[http://melpa.org/#/cliphist][file:http://melpa.org/packages/cliphist-badge.svg]] [[http://stable.melpa.org/#/cliphist][file:http://stable.melpa.org/packages/cliphist-badge.svg]]
+* Cliphist
+[[http://melpa.org/#/cliphist][file:http://melpa.org/packages/cliphist-badge.svg]]
+[[http://stable.melpa.org/#/cliphist][file:http://stable.melpa.org/packages/cliphist-badge.svg]]
 
 Read data from clipboard managers at Linux and Mac,
 - [[http://parcellite.sourceforge.net/][Parcellite]] on Linux
 - [[http://clipit.sourceforge.net/][ClipIt]] on Linux
-- [[https://github.com/TermiT/Flycut][Flycut]] on Mac
+- [[https://github.com/erebe/greenclip]] on Linux
+- [[https://github.com/TermiT/Flycut][Flycut]] on macOS
 * Install
 The easiest way is install from [[http://melpa.org][melpa]] using package manager.
 
@@ -23,23 +24,24 @@ If you use Flycut on macOS, set up "Preferences > General > Clippings" so its va
 - =M-x cliphist-paste-item= to paste item from history. =C-u M-x cliphist-paste-item= rectangle paste item
 - =M-x cliphist-select-item= to select item
 
-* Advanced Tips (OPTIONAL)
-** Tip 1
-You can customize the behavior of cliphist-select-item,
+* Tips (OPTIONAL)
+** Customize the behavior of =cliphist-select-item=
 #+begin_src elisp
 (setq cliphist-select-item-callback
       (lambda (num str) (cliphist-copy-to-clipboard str)))
 #+end_src
-** Tip 2
+** Copy selected clipboard item into =kill-ring=
 If `cliphist-cc-kill-ring` is true, the selected/pasted string will be inserted into kill-ring.
 #+begin_src elisp
 (setq cliphist-cc-kill-ring t)
 #+end_src
-** Tip 3
+** Detect clipboard manager
 You can tweak =cliphist-linux-clipboard-managers= to tell cliphist how to detect clipboard manager,
 #+begin_src elisp
-(setq cliphist-linux-clipboard-managers '("clipit" "parcellite"))
+(setq cliphist-linux-clipboard-managers '("greenclip" "clipit" "parcellite"))
 #+end_src
+** Set up greenclip
+Set =cliphist-greenclip-program= if greenclip program is not added into =load-path= and you use greenclip.
 * Bug Report
 Check [[https://github.com/redguardtoo/cliphist]].
 

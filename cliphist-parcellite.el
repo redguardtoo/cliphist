@@ -1,8 +1,8 @@
 ;;; cliphist-parcellite.el --- read parcelllite data file
 
-;; Copyright (C) 2015-2019 Chen Bin
+;; Copyright (C) 2015-2021 Chen Bin
 
-;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
+;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
 
 ;; This file is not part of GNU Emacs.
 

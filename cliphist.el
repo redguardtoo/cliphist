@@ -1,11 +1,11 @@
 ;;; cliphist.el --- Read data from clipboard managers at Linux and Mac
 
-;; Copyright (C) 2015-2019 Chen Bin
+;; Copyright (C) 2015-2021 Chen Bin
 ;;
-;; Version: 0.5.6
+;; Version: 0.5.7
 ;; Package-Requires: ((emacs "24.3") (ivy "0.9.0"))
 ;; Keywords: clipboard manager history
-;; Author: Chen Bin <chenin DOT sh AT gmail DOT com>
+;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
 ;; URL: http://github.com/redguardtoo/cliphist
 
 ;; This file is not part of GNU Emacs.
@@ -27,35 +27,42 @@
 ;;; Commentary:
 
 ;; Read clipboard items from following clipboard managers,
-;;   - Parcellite (http://parcellite.sourceforge.net) at Linux
-;;   - ClipIt (http://clipit.sourceforge.net) at Linux
+;;   - Parcellite (http://parcellite.sourceforge.net) on Linux
+;;   - ClipIt (http://clipit.sourceforge.net) on Linux
+;;   - Greenclip (https://github.com/erebe/greenclip) on Linux
 ;;   - Flycut (https://github.com/TermiT/Flycut) on OSX
 ;;
 ;; Usage:
 ;;   Make sure clipboard manager is running.
 ;;   If you use Flycut on macOS, set up "Preferences > General > Clippings",
 ;;   so its value is "Save After each clip".
-;;   `M-x cliphist-paste-item' to paste item from history
-;;   `C-u M-x cliphist-paste-item' rectangle paste item
-;;   `M-x cliphist-select-item' to select item
+;;   "M-x cliphist-paste-item" to paste item from history
+;;   "C-u M-x cliphist-paste-item" rectangle paste item
+;;   "M-x cliphist-select-item" to select item
 ;;
 ;; You can customize the behavior of cliphist-select-item,
+;;
 ;;     (setq cliphist-select-item-callback
 ;;        (lambda (num str) (cliphist-copy-to-clipboard str)))
 ;;
-;;   If `cliphist-cc-kill-ring' is true, the selected/pasted string
-;;   will be inserted into kill-ring
+;; If `cliphist-cc-kill-ring' is true, the selected/pasted string
+;; will be inserted into kill-ring.
 ;;
-;; You can tweak =cliphist-linux-clipboard-managers= to tell cliphist
+;; You can tweak `cliphist-linux-clipboard-managers' to tell cliphist
 ;; how to detect clipboard manager:
-;;   `(setq cliphist-linux-clipboard-managers '("clipit" "parcellite"))'
+;;
+;;   (setq cliphist-linux-clipboard-managers '("greenclip" "clipit" "parcellite"))
+;;
+;; Set `cliphist-greenclip-program' if greenclip program is not added into
+;; `load-path' and you use greenclip.
+;;
 
 ;;; Code:
 
 (require 'ivy)
 
 (defvar cliphist-linux-clipboard-managers
-  '("parcellite" "clipit")
+  '("greenclip" "clipit" "parcellite")
   "We will try to detect the clipboard manager one by one.")
 
 (defvar cliphist-cc-kill-ring nil
@@ -72,6 +79,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 (autoload 'cliphist-flycut-read-items "cliphist-flycut" nil)
 (autoload 'cliphist-parcellite-read-items "cliphist-parcellite" nil)
 (autoload 'cliphist-clipit-read-items "cliphist-clipit" nil)
+(autoload 'cliphist-greenclip-read-items "cliphist-greenclip" nil)
 
 (defun cliphist--posn-col-row (posn)
   (let* ((col (car (posn-col-row posn)))
@@ -86,10 +94,10 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 (defun cliphist--strip (str)
   (replace-regexp-in-string "\\(^[ \t\n\r]+\\|[ \t\n\r]+$\\)" "" str))
 
-(defun cliphist-row (&optional pos)
-  "The row position of cursort in current window"
+(defun cliphist-row (&optional position)
+  "The row POSITION in current window."
   (interactive)
-  (cdr (cliphist--posn-col-row (posn-at-point pos))))
+  (cdr (cliphist--posn-col-row (posn-at-point position))))
 
 (defun cliphist-create-stripped-summary (str)
   (cliphist-create-summary (cliphist--strip str)))
@@ -112,17 +120,20 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 
 ;;;###autoload
 (defun cliphist-version ()
-  (message "0.5.6"))
+  (message "0.5.7"))
 
 ;;;###autoload
 (defun cliphist-read-items ()
   (interactive)
   (let* (rlt i)
     (cond
+     ;; macOS
      ((eq system-type 'darwin)
       ;; if nothing in clipboard, avoid purging the cache in Emacs
       (if (setq rlt (cliphist-flycut-read-items 'cliphist-add-item-to-cache))
           (setq cliphist-items rlt)))
+
+     ;; Linux
      ((or (eq system-type 'gnu/linux) (eq system-type 'linux))
       ;; if nothing in clipboard, avoid purging the cache in Emacs
       (setq i 0)
@@ -133,6 +144,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
                            'cliphist-add-item-to-cache))
         (setq i (+ 1 i)))
       (if rlt (setq cliphist-items rlt)))
+
      (t (message "Sorry, only Linux and Mac are supported.")))
     rlt))
 
