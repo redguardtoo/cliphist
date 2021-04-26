@@ -2,7 +2,7 @@
 [[http://melpa.org/#/cliphist][file:http://melpa.org/packages/cliphist-badge.svg]]
 [[http://stable.melpa.org/#/cliphist][file:http://stable.melpa.org/packages/cliphist-badge.svg]]
 
-Read data from clipboard managers at Linux and Mac,
+Read data from clipboard managers at Linux and macOS,
 - [[http://parcellite.sourceforge.net/][Parcellite]] on Linux
 - [[http://clipit.sourceforge.net/][ClipIt]] on Linux
 - [[https://github.com/erebe/greenclip]] on Linux

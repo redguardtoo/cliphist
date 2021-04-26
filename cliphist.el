@@ -1,4 +1,4 @@
-;;; cliphist.el --- Read data from clipboard managers at Linux and Mac
+;;; cliphist.el --- Read data from clipboard managers at Linux and macOS
 
 ;; Copyright (C) 2015-2021 Chen Bin
 ;;
@@ -81,23 +81,8 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 (autoload 'cliphist-clipit-read-items "cliphist-clipit" nil)
 (autoload 'cliphist-greenclip-read-items "cliphist-greenclip" nil)
 
-(defun cliphist--posn-col-row (posn)
-  (let* ((col (car (posn-col-row posn)))
-         ;; `posn-col-row' doesn't work well with lines of different height.
-         ;; `posn-actual-col-row' doesn't handle multiple-width characters.
-         (row (cdr (posn-actual-col-row posn))))
-    (when (and header-line-format (version< emacs-version "24.3.93.3"))
-      ;; http://debbugs.gnu.org/18384
-      (cl-decf row))
-    (cons (+ col (window-hscroll)) row)))
-
 (defun cliphist--strip (str)
   (replace-regexp-in-string "\\(^[ \t\n\r]+\\|[ \t\n\r]+$\\)" "" str))
-
-(defun cliphist-row (&optional position)
-  "The row POSITION in current window."
-  (interactive)
-  (cdr (cliphist--posn-col-row (posn-at-point position))))
 
 (defun cliphist-create-stripped-summary (str)
   (cliphist-create-summary (cliphist--strip str)))
