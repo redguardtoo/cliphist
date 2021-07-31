@@ -1,8 +1,4 @@
-;;; cliphist-flycut.el --- read flycut data file
-
-;; Copyright (C) 2015-2021 Chen Bin
-
-;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
+;;; cliphist-flycut.el --- read flycut data -*- lexical-binding: t -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -21,11 +17,15 @@
 
 ;;; Commentary:
 
-;; Read "~/Library/Application Support/Flycut/com.generalarcade.flycut.plist" on OSX
+;; Read "~/Library/Application Support/Flycut/com.generalarcade.flycut.plist" on macOS
 
 ;;; Code:
 
 (require 'xml)
+(require 'cliphist-sdk)
+
+(defvar cliphist-flycut-history-path nil
+  "Clipboard history path.  If nil, it's is automatically detected.")
 
 (defun cliphist-flycut-get-dict (item)
   "Get dict node from ITEM's array.  First or second element has dict child.
@@ -37,8 +37,8 @@ It's decided by Flycut version."
       (setq rlt (xml-get-children (nth 1 arr) 'dict)))
     rlt))
 
-(defun cliphist-flycut-find-xml-node-containting-items (items)
-  "We need node type is `key' and value is `displayLen'."
+(defun cliphist-flycut-find-xml-node-contain-items (items)
+  "Find item from ITEMS.  Item should have children \"key\" and \"displayLen\"."
   (let* (rlt
          child
          (i 0))
@@ -51,7 +51,8 @@ It's decided by Flycut version."
       (setq i (+ i 1)))
     rlt))
 
-(defun cliphist-flycut-guess-preference-path ()
+(defun cliphist-flycut-guess-history-path ()
+  "Guess clipboard history path."
   (let* ((rlt (file-truename "~/Library/Preferences/com.generalarcade.flycut.plist")))
     (unless (file-exists-p rlt)
       (setq rlt (file-truename "~/Library/Application Support/Flycut/com.generalarcade.flycut.plist")))
@@ -59,16 +60,13 @@ It's decided by Flycut version."
       (setq rlt (file-truename "~/Library/Containers/com.generalarcade.flycut/Data/Library/Preferences/com.generalarcade.flycut.plist")))
     rlt))
 
-(defun cliphist-flycut-is-bplist ()
-  (string= (buffer-substring-no-properties (point-min) (+ (point-min) 6))
-           "bplist"))
-
 (defun cliphist-flycut-read-plist (plist-file)
   "Read PLIST-FILE which could be in binary format."
   (let* ((plutil-cmd (concat "plutil -convert xml1 -o - " plist-file))
          (content (with-temp-buffer
                     (insert-file-contents plist-file)
-                    (when (cliphist-flycut-is-bplist)
+                    (when (string= (buffer-substring-no-properties (point-min) (+ (point-min) 6))
+                                   "bplist")
                       ;; macOS might use binary plist format
                       (erase-buffer)
                       (insert (shell-command-to-string plutil-cmd)))
@@ -76,6 +74,7 @@ It's decided by Flycut version."
     (cadr (xml-node-children (car content)))))
 
 (defun cliphist-flycut-get-next-value (i dict)
+  "Get I item's value from DICT."
   (let* (out-of-loop (len (length dict)) e rlt)
     (while (and (not out-of-loop) (< i len))
       (setq e (nth i dict))
@@ -89,7 +88,7 @@ It's decided by Flycut version."
 
 (defun cliphist-flycut-get-value-by-key (key-str dict)
   "Get value by KEY-STR from DICT node."
-  (let* (out-of-loop (i 0) e val rlt)
+  (let* (out-of-loop (i 0) e rlt)
     (while (and (not out-of-loop)
                 (< i (length dict)))
       (setq e (nth i dict))
@@ -105,23 +104,18 @@ It's decided by Flycut version."
         (setq i (1+ i)))))
     rlt))
 
-(defun cliphist-flycut-read-items (&optional fn-insert)
-  "Flycut store the data in xml file where item is extracted.
-FN-INSERT inserts the item into the list which returned by this function."
+(defun cliphist-flycut-read-items ()
+  "Read clipboard items."
   (let* (rlt
-         (path (cliphist-flycut-guess-preference-path))
+         (path (or cliphist-flycut-history-path
+                   (cliphist-flycut-guess-history-path)))
          ;; (path (file-truename "~/projs/cliphist/data/flycut/com.generalarcade.flycut.plist"))
          (xml-tree (cliphist-flycut-read-plist path))
-         (arr (cliphist-flycut-find-xml-node-containting-items (xml-get-children xml-tree 'dict))))
+         (arr (cliphist-flycut-find-xml-node-contain-items (xml-get-children xml-tree 'dict))))
     (when arr
       (dolist (item arr)
         (when (string= (cliphist-flycut-get-value-by-key 'Type item) "NSStringPboardType")
-          (cond
-           (fn-insert
-            (funcall fn-insert 'rlt (cliphist-flycut-get-value-by-key "Contents" item)))
-           (t
-            ;; do nothing
-            )))))
+          (cliphist-sdk-add-item-to-cache rlt (cliphist-flycut-get-value-by-key "Contents" item)))))
     rlt))
 
 (provide 'cliphist-flycut)

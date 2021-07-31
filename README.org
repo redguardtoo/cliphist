@@ -1,22 +1,22 @@
 * Cliphist
+[[https://github.com/redguardtoo/cliphist/actions/workflows/test.yml][https://github.com/redguardtoo/cliphist/actions/workflows/test.yml/badge.svg]]
 [[http://melpa.org/#/cliphist][file:http://melpa.org/packages/cliphist-badge.svg]]
 [[http://stable.melpa.org/#/cliphist][file:http://stable.melpa.org/packages/cliphist-badge.svg]]
 
-Read data from clipboard managers at Linux and macOS,
+Paste from clipboard managers,
 - [[http://parcellite.sourceforge.net/][Parcellite]] on Linux
 - [[http://clipit.sourceforge.net/][ClipIt]] on Linux
 - [[https://github.com/erebe/greenclip]] on Linux
 - [[https://github.com/TermiT/Flycut][Flycut]] on macOS
+
+Users can add their own favorite clipboard managers on any OS easily. See the "Tips" section.
+
+Please note since v0.6.0 cliphist uses Emacs builtin API =completing-read= instead of =ivy-read= from [[https://github.com/abo-abo/swiper][Ivy]]. So now cliphist can work with any narrow&completion package (helm/ivy/consult/orderless/embark ...)
+
+[[file:demo.png]]
+
 * Install
-The easiest way is install from [[http://melpa.org][melpa]] using package manager.
-
-If you install from source code, please place cliphist.el somewhere (say =~/.emacs/lisp=), and insert below code into =~/.emacs=:
-
-#+begin_src elisp
-(add-to-list 'load-path "~/.emacs.d/lisp/")
-(require 'cliphist)
-#+end_src
-
+Please install from [[http://melpa.org][melpa]].
 * Usage
 Make sure the clipboard manager is running.
 
@@ -25,21 +25,38 @@ If you use Flycut on macOS, set up "Preferences > General > Clippings" so its va
 - =M-x cliphist-select-item= to select item
 
 * Tips (OPTIONAL)
-** Customize the behavior of =cliphist-select-item=
+** Customize =cliphist-select-item=
+For example, if you use xclip (https://elpa.gnu.org/packages/xclip.html),
 #+begin_src elisp
+(require 'xclip)
 (setq cliphist-select-item-callback
-      (lambda (num str) (cliphist-copy-to-clipboard str)))
+   (lambda (num str)
+      (xclip-set-selection 'clipboard str)))
 #+end_src
 ** Copy selected clipboard item into =kill-ring=
 If `cliphist-cc-kill-ring` is true, the selected/pasted string will be inserted into kill-ring.
 #+begin_src elisp
 (setq cliphist-cc-kill-ring t)
 #+end_src
-** Detect clipboard manager
-You can tweak =cliphist-linux-clipboard-managers= to tell cliphist how to detect clipboard manager,
+** Add your own clipboard manager
+Set =cliphist-linux-clipboard-managers=,  =cliphist-macos-clipboard-managers=, =cliphist-windows-clipboard-managers= to insert/remove clipboard managers.
+
+Here are steps to support a new clipboard manager named "myclip" on Linux.
+
+Step 1, create a file "cliphist-myclip.el" with below content,
 #+begin_src elisp
-(setq cliphist-linux-clipboard-managers '("greenclip" "clipit" "parcellite"))
+(require 'cliphist-sdk)
+(defun cliphist-my-read-items ()
+  (let (rlt
+        (items '("clip1" "clip2")))
+    (dolist (item items)
+      (cliphist-sdk-add-item-to-cache rlt item))
+    rlt))
+(provide 'cliphist-myclip)
 #+end_src
+
+Step 2, add =(push "myclip" cliphist-linux-clipboard-managers)= into =~/.emacs=.
+
 ** Set up greenclip
 Set =cliphist-greenclip-program= if greenclip program is not added into =load-path= and you use greenclip.
 * Bug Report

@@ -1,8 +1,4 @@
-;;; cliphist-clipit.el --- read parcelllite data file
-
-;; Copyright (C) 2015-2021 Chen Bin
-
-;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
+;;; cliphist-clipit.el --- read clipit data -*- lexical-binding: t -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -24,6 +20,13 @@
 ;; Read "~/.local/share/clipit/history" on Linux
 
 ;;; Code:
+(require 'cliphist-sdk)
+
+(defvar cliphist-clipit-history-path  "~/.local/share/clipit/history"
+  "Clipboard history path.  If it's nil, the path is automatically detected.")
+
+(defvar cliphist-clipit-installed-p (and (executable-find "clipit") t)
+  "The program is installed.")
 
 (defun cliphist-clipit-get-item-size (str len beg)
   "Scan STR whose length is LEN.  Start scanning from position BEG.
@@ -50,22 +53,21 @@ ITEM is the previous item extracted whose data useful for current extraction."
       (setq rlt (list (substring str str-beg (+ str-beg size)) (+ str-beg size))))
     rlt))
 
-(defun cliphist-clipit-read-items (fn-insert)
-  "Check save_history defined in ClipIt history.c.
-68 bytes rubbish at the beginning of file plus the item list.
-
-For each item in the item list, First 4 bytes specify the size of content.
-Then is number 1, content of item, number 4, number 2, and boolean flage is_static.
-
+(defun cliphist-clipit-read-items ()
+  "Read clipboard items.
+Check save_history defined in ClipIt \"history.c\".
+68 bytes rubbish at the beginning of file plus the items.
+In each item, First 4 bytes are the size of content.
+Then number 1, item content, number 4, number 2.  boolean flag \"is_static\".
 Please note bytes are stored in little endian way.
-Number and boolean flag takes 4 bytes.
-Extracted item will be passed to FN-INSERT."
-  (let* ((path (file-truename "~/.local/share/clipit/history"))
+Number and boolean flag takes 4 bytes."
+  (let* ((path (file-truename cliphist-clipit-history-path))
          str
          str-len
          item
          rlt)
-    (when (file-exists-p path)
+
+    (when (and (file-exists-p path) cliphist-clipit-installed-p)
       (setq str (with-temp-buffer
                   (set-buffer-multibyte nil)
                   (setq buffer-file-coding-system 'binary)
@@ -74,9 +76,7 @@ Extracted item will be passed to FN-INSERT."
       (setq str-len (length str))
       ;; read clipboard items into cache
       (while (setq item (cliphist-clipit-read-item str str-len item))
-        ;; filter out short strings
-        (unless (< (length (car item)) 3)
-          (funcall fn-insert 'rlt (decode-coding-string (car item) 'utf-8)))))
+        (cliphist-sdk-add-item-to-cache rlt (decode-coding-string (car item) 'utf-8))))
     rlt))
 
 (provide 'cliphist-clipit)

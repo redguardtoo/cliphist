@@ -1,8 +1,4 @@
-;;; cliphist-parcellite.el --- read parcelllite data file
-
-;; Copyright (C) 2015-2021 Chen Bin
-
-;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
+;;; cliphist-parcellite.el --- read parcellite data -*- lexical-binding: t -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -25,6 +21,14 @@
 
 ;;; Code:
 
+(require 'cliphist-sdk)
+
+(defvar cliphist-parcellite-history-path  "~/.local/share/parcellite/history"
+  "Clipboard history path.  If it's nil, the path is automatically detected.")
+
+(defvar cliphist-parcellite-installed-p (and (executable-find "parcellite") t)
+  "The program is installed.")
+
 (defun cliphist-parcellite-get-item-size (str len beg &optional short-int)
   "Scan STR whose length is LEN.  Start scanning from position BEG.
 If SHORT-INT is t, read 2 bytes.  Or else read 4 bytes."
@@ -42,11 +46,7 @@ If SHORT-INT is t, read 2 bytes.  Or else read 4 bytes."
   "Parcellite binary data STR with length LEN is analyzed.
 ITEM is the previous item extracted whose data useful for current extraction.
 If IS-NEW-VERSION is t, it's Parcellite v1.0+."
-  (let (rlt
-        index
-        beg
-        type
-        size)
+  (let (rlt beg type size)
     (if item (setq beg (nth 1 item))
       (setq beg (if is-new-version 32 0)))
     ;; read 4 bytes to get the item length
@@ -67,17 +67,18 @@ If IS-NEW-VERSION is t, it's Parcellite v1.0+."
           (setq rlt (list (substring str (+ 4 beg) (+ 4 beg size)) (+ 4 beg size))))))
     rlt))
 
-(defun cliphist-parcellite-read-items (fn-insert)
-  "For each item, First 4 bytes specify the size of content.
-It ends with 4 byte zeroed.  Please note byte are stored in little endian way.
-Extracted item will be passed to FN-INSERT."
-  (let* ((path (file-truename "~/.local/share/parcellite/history"))
+(defun cliphist-parcellite-read-items ()
+  "Read clipboard items.
+In each item, first 4 bytes are the size of content.
+It ends with 4 byte zeroed.  Please note byte are stored in little endian way."
+  (let* ((path (file-truename cliphist-parcellite-history-path))
          str
          str-len
          is-new-version
          item
          rlt)
-    (when (file-exists-p path)
+
+    (when (and (file-exists-p path) cliphist-parcellite-installed-p)
       (setq str (with-temp-buffer
                   (set-buffer-multibyte nil)
                   (setq buffer-file-coding-system 'binary)
@@ -90,9 +91,7 @@ Extracted item will be passed to FN-INSERT."
                                 (= (elt str 2) 48)))
       ;; read clipboard items into cache
       (while (setq item (cliphist-parcellite-read-item str str-len item is-new-version))
-        ;; filter out short strings
-        (unless (< (length (car item)) 3)
-          (funcall fn-insert 'rlt (decode-coding-string (car item) 'utf-8)))))
+        (cliphist-sdk-add-item-to-cache rlt (decode-coding-string (car item) 'utf-8))))
     rlt))
 
 (provide 'cliphist-parcellite)

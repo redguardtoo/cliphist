@@ -1,8 +1,4 @@
-;;; cliphist-greenclip.el --- read parcelllite data file
-
-;; Copyright (C) 2015-2021 Chen Bin
-
-;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
+;;; cliphist-greenclip.el --- read greenclip data -*- lexical-binding: t -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -22,6 +18,9 @@
 ;;; Commentary:
 
 ;;; Code:
+
+(require 'cliphist-sdk)
+
 (defvar cliphist-greenclip-program "greenclip"
   "The path of greenclip program.")
 
@@ -30,9 +29,8 @@
   (setq str (replace-regexp-in-string "\u00a0" "\n" str))
   str)
 
-(defun cliphist-greenclip-read-items (fn-insert)
-  "Read clipboard items of greenclip.
-Extracted item will be passed to FN-INSERT."
+(defun cliphist-greenclip-read-items ()
+  "Read clipboard items."
   (when (executable-find cliphist-greenclip-program)
     (let* ((cmd (format "%s print" cliphist-greenclip-program))
            (lines (split-string (shell-command-to-string cmd) "[\r\n]+"))
@@ -41,8 +39,7 @@ Extracted item will be passed to FN-INSERT."
       (when (and lines (> (length lines) 0))
         (dolist (line lines)
           (setq item (cliphist-greenclip-read-item line))
-          (unless (< (length item) 3)
-            (funcall fn-insert 'rlt (decode-coding-string item 'utf-8)))))
+          (cliphist-sdk-add-item-to-cache rlt (decode-coding-string item 'utf-8))))
       rlt)))
 
 (provide 'cliphist-greenclip)
