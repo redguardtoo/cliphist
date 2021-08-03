@@ -11,7 +11,7 @@ Paste from clipboard managers,
 
 Users can add their own favorite clipboard managers on any OS easily. See the "Tips" section.
 
-Please note since v0.6.0 cliphist uses Emacs builtin API =completing-read= instead of =ivy-read= from [[https://github.com/abo-abo/swiper][Ivy]]. So now cliphist can work with any narrow&completion package (helm/ivy/consult/orderless/embark ...)
+Please note since v0.6.1 cliphist uses Emacs builtin API =completing-read= instead of =ivy-read= from [[https://github.com/abo-abo/swiper][Ivy]]. So now cliphist can work with any narrow&completion package (helm/ivy/consult/orderless/embark ...)
 
 [[file:demo.png]]
 
@@ -26,7 +26,7 @@ If you use Flycut on macOS, set up "Preferences > General > Clippings" so its va
 
 * Tips (OPTIONAL)
 ** Customize =cliphist-select-item=
-For example, if you use xclip (https://elpa.gnu.org/packages/xclip.html),
+If you use "xclip.el" (https://elpa.gnu.org/packages/xclip.html), here is setup,
 #+begin_src elisp
 (require 'xclip)
 (setq cliphist-select-item-callback

@@ -24,5 +24,17 @@
        (push (cons (cliphist-sdk-create-summary stripped) ,str)
              ,item-list))))
 
+(defun cliphist-sdk-feed-text-to-cli (text program &rest arguments)
+  "Feed TEXT to cli PROGRAM with ARGUMENTS through stdin."
+  (with-temp-buffer
+    (insert text)
+    (call-process-region (point-min)
+                         (point-max)
+                         program
+                         nil
+                         nil
+                         nil
+                         arguments)))
+
 (provide 'cliphist-sdk)
 ;;; cliphist-sdk.el ends here

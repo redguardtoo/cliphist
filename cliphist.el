@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015-2021 Chen Bin
 ;;
-;; Version: 0.6.0
+;; Version: 0.6.1
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
@@ -74,6 +74,8 @@
 
 ;;; Code:
 
+(require 'cliphist-sdk)
+
 (defvar cliphist-windows-clipboard-managers
   '()
   "Clipboard managers on Windows.")
@@ -89,10 +91,30 @@
 (defvar cliphist-cc-kill-ring nil
   "Copy the selected/pasted item into kill ring.")
 
-(defvar cliphist-select-item-callback nil
-  "The callback of `cliphist-select-item'.
-If nil, selected item is copied to clipboard when `cliphist-select-item' called.
-Or else the `(funcall cliphist-select-item num item)' will be executed.")
+(defvar cliphist-select-item-callback
+  (lambda (n str)
+    (ignore n)
+    (cond
+     ;; macOS
+     ((eq system-type 'darwin)
+      (cliphist-sdk-feed-text-to-cli str "pbcopy"))
+
+     ;; linux
+     ((memq system-type '(gnu gnu/linux gnu/kfreebsd))
+      (cond
+       ((executable-find "xsel")
+        (cliphist-sdk-feed-text-to-cli str "xsel" "--clipboard" "-i"))
+       ((executable-find "xclip")
+        (cliphist-sdk-feed-text-to-cli str "xclip" "-selection" "clipboard" "-i"))
+       (t
+        (message "Please install xsel or xclip first."))))
+
+     ;; windows?
+     (t
+      (error "Clipboard support not available"))))
+  "The callback used by `cliphist-select-item'.
+By default, selected item is copied to clipboard on Linux&macOS.
+Users are encouraged to set this function by themselves.")
 
 (defvar cliphist-items nil
   "Item list extracted from clipboard manager.  Internal variable.")
@@ -103,7 +125,7 @@ Or else the `(funcall cliphist-select-item num item)' will be executed.")
 ;;;###autoload
 (defun cliphist-version ()
   "Echo package version."
-  (message "0.6.0"))
+  (message "0.6.1"))
 
 ;;;###autoload
 (defun cliphist-read-items ()
