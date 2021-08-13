@@ -28,13 +28,14 @@
   "Feed TEXT to cli PROGRAM with ARGUMENTS through stdin."
   (with-temp-buffer
     (insert text)
-    (call-process-region (point-min)
-                         (point-max)
-                         program
-                         nil
-                         nil
-                         nil
-                         arguments)))
+    (apply #'call-process-region
+           (point-min)
+           (point-max)
+           program
+           nil
+           nil
+           nil
+           arguments)))
 
 (provide 'cliphist-sdk)
 ;;; cliphist-sdk.el ends here

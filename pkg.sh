@@ -1,6 +1,6 @@
 #!/bin/bash
 name=cliphist
-version=0.6.1
+version=0.6.2
 pkg=$name-$version
 mkdir $pkg
 cp README.org $pkg

@@ -11,7 +11,7 @@ Paste from clipboard managers,
 
 Users can add their own favorite clipboard managers on any OS easily. See the "Tips" section.
 
-Please note since v0.6.1 cliphist uses Emacs builtin API =completing-read= instead of =ivy-read= from [[https://github.com/abo-abo/swiper][Ivy]]. So now cliphist can work with any narrow&completion package (helm/ivy/consult/orderless/embark ...)
+Please note since version 0.6 cliphist uses Emacs builtin API =completing-read= instead of =ivy-read= from [[https://github.com/abo-abo/swiper][Ivy]]. So now cliphist can work with any narrow&completion package (helm/ivy/consult/orderless/embark ...)
 
 [[file:demo.png]]
 
