@@ -40,7 +40,7 @@
         (dolist (line lines)
           (setq item (cliphist-greenclip-read-item line))
           (cliphist-sdk-add-item-to-cache rlt (decode-coding-string item 'utf-8))))
-      rlt)))
+      (nreverse rlt))))
 
 (provide 'cliphist-greenclip)
 ;;; cliphist-greenclip.el ends here

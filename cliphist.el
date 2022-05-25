@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015-2021 Chen Bin
 ;;
-;; Version: 0.6.2
+;; Version: 0.6.3
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: clipboard manager history
 ;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
@@ -125,7 +125,7 @@ Users are encouraged to set this function by themselves.")
 ;;;###autoload
 (defun cliphist-version ()
   "Echo package version."
-  (message "0.6.2"))
+  (message "0.6.3"))
 
 ;;;###autoload
 (defun cliphist-read-items ()
